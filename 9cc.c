@@ -158,6 +158,11 @@ Node *new_node_num(int val) {
   return node;
 }
 
+// エラー防ぐためのプロトタイプ宣言
+Node *expr();
+Node *mul();
+Node *primary();
+
 // expr = mul ("+" mul | "-" mul)*
 Node *expr() {
   Node *node = mul();
@@ -197,6 +202,37 @@ Node *primary() {
 
   // 数値のはず
   return new_node_num(expect_number());
+}
+
+void gen(Node *node) {
+  if (node->kind == ND_NUM) {
+    printf("  push %d\n", node->val);
+    return;
+  }
+
+  gen(node->lhs);
+  gen(node->rhs);
+
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+
+  switch (node->kind) {
+  case ND_ADD:
+    printf("  add rax, rdi\n");
+    break;
+  case ND_SUB:
+    printf("  sub rax, rdi\n");
+    break;
+  case ND_MUL:
+    printf("  imul rax, rdi\n");
+    break;
+  case ND_DIV:
+    printf("  cqo\n"); // raxを128bit整数として rdx+rax(連接)に保存
+    printf("  idiv rdi\n"); // 符号蟻除算においてrdx+rax(連接)をrdiで割って raxに商を、rdxに余りをセットする
+    break;
+  }
+
+  printf("  push rax\n");
 }
 
 int main(int argc, char **argv) {
