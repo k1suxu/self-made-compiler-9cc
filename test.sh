@@ -48,9 +48,18 @@ assert 1 '1>=0;'
 assert 1 '1>=1;'
 assert 0 '1>=2;'
 assert 2 '(1==2)+(1!=2)+(1<=2);'
+
 assert 14 ' a = 3;
-            b = 5 * 6 - 8;
-            a + b / 2;'
+b = 5 * 6 - 8;
+a + b / 2;'
+
+assert 6 'foo = 1;
+bar = 2 + 3;
+foo + bar;'
+assert 1 'fo_110o = 1;
+_bAr = 2 + 3;
+Hoge_fo = -5;
+fo_110o + _bAr + Hoge_fo;'
 
 
 echo OK
