@@ -1,11 +1,38 @@
 #include <stdio.h>
 #include "9cc.h"
 
+void gen_lval(Node *node) {
+  if (node->kind != ND_LVAR)
+    error("代入演算の左辺が変数ではありません");
+  
+  /* raxにrbp-offsetを代入*/
+  printf("  mov rax, rbp\n");
+  printf("  sub rax, %d\n", node->offset);
+  printf("  push rax\n");
+}
+
 void gen(Node *node) {
-  if (node->kind == ND_NUM) {
+  switch (node->kind) {
+  case ND_NUM:
     printf("  push %d\n", node->val);
     return;
+  case ND_LVAR:
+    gen_lval(node);
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+    printf("  push rax\n");
+    return;
+  case ND_ASSIGN:
+    gen_lval(node->lhs);
+    gen(node->rhs);
+
+    printf("  pop rdi\n"); // 右辺値をrdiへ取り出す
+    printf("  pop rax\n"); // 左辺値(変数のメモリアドレス)を取り出す
+    printf("  mov [rax], rdi\n");
+    printf("  push rdi\n");
+    return;
   }
+
 
   gen(node->lhs);
   gen(node->rhs);

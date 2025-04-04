@@ -39,11 +39,18 @@ bool consume(char *op) {
   return true;
 }
 
+Token *consume_ident() {
+  if (token->kind != TK_IDENT) return NULL;
+  Token *ret = token;
+  token = token->next;
+  return ret;
+}
+
 /* 次のトークンが期待している記号のときには、トークンを1つ読み進める */
 /* それ以外の場合にはエラーを報告する */
 void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
-    error_at(token->str, "'%c'ではありません", op);
+    error_at(token->str, "'%s'ではありません", op);
   token = token->next;
 }
 
@@ -96,7 +103,7 @@ Token *tokenize(char *p) {
     }
 
     /* single letter */
-    if (strchr("+-*/()<>", *p)) {
+    if (strchr("+-*/()<>;=", *p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -107,6 +114,11 @@ Token *tokenize(char *p) {
       char *q = p;
       cur->val = strtol(p, &p, 10);
       cur->len = p - q;
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
     error_at(p, "トークナイズできません");
@@ -135,15 +147,37 @@ Node *new_node_num(int val) {
   return node;
 }
 
-/*
- * expr = equality
- */
-Node *expr() {
-  return equality();
+Node *code[100];
+
+// program = stmt*
+void program() {
+  int i = 0;
+  while (!at_eof())
+    code[i++] = stmt();
+  code[i] = NULL;
 }
-/*
- * equality = relational ("==" relational | "!=" relational)*
- */
+
+// stmt = expr ";"
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
+
+// expr = assign
+Node *expr() {
+  return assign();
+}
+
+// assign = equality ("=" assign)?
+Node *assign() {
+  Node *node = equality();
+  if (consume("="))
+    node = new_node_binary(ND_ASSIGN, node, assign());
+  return node;
+}
+
+// equality = relational ("==" relational | "!=" relational)*
 Node *equality() {
   Node *node = relational();
 
@@ -156,9 +190,7 @@ Node *equality() {
       return node;
   }
 }
-/*
- * relational = add ("<" add | "<=" add | ">" add | ">=" add)*
- */
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *relational() {
   Node *node = add();
 
@@ -175,9 +207,7 @@ Node *relational() {
       return node;
   }
 }
-/*
- * add = mul ("+" mul | "-" mul)
- */
+// add = mul ("+" mul | "-" mul)
 Node *add() {
   Node *node = mul();
 
@@ -190,9 +220,7 @@ Node *add() {
       return node;
   }
 }
-/*
- * mul = unary ("*" unary | "/" unary)*
- */
+// mul = unary ("*" unary | "/" unary)*
 Node *mul() {
   Node *node = unary();
 
@@ -206,9 +234,7 @@ Node *mul() {
       return node;
   }
 }
-/*
- * unary = ("+" | "-")? | primary
- */
+// unary = ("+" | "-")? primary
 Node *unary() {
   if (consume("+"))
     return primary();
@@ -216,9 +242,7 @@ Node *unary() {
     return new_node_binary(ND_SUB, new_node_num(0), primary());
   return primary();
 }
-/*
- * primary = num | "(" expr ")"
- */
+// primary = num | ident | "(" expr ")"
 Node *primary() {
   /* 次のトークンが "(" なら、 "(" expr ")"のはず */
   if (consume("(")) {
@@ -227,6 +251,12 @@ Node *primary() {
     return node;
   }
 
+  Token *tok = consume_ident();
+  if (tok) {
+    Node *node = new_node(ND_LVAR);
+    node->offset = (tok->str[0] - 'a' + 1) * 8; // オフセットは8ずつ変わる(暫定的)
+    return node;
+  }
   /* 数値のはず */
   return new_node_num(expect_number());
 }
