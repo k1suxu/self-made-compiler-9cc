@@ -90,16 +90,22 @@ void program() {
   code[i] = NULL;
 }
 
-// stmt = expr ";" | "return" expr ";"
+/*
+stmt =    expr ";"
+        | "return" expr ";"
+        | "if" "(" expr ")" stmt ("else" stmt)?
+        | "while" "(" expr ")" stmt
+        | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+ */ 
 Node *stmt() {
-  Node *node;
   if (consume_kind(TK_RETURN)) {
-    node = new_node(ND_RETURN);
+    Node *node = new_node(ND_RETURN);
     node->lhs = expr();
-  } else {
-    node = expr();
+    expect(";");
+    return node;
   }
 
+  Node *node = expr();
   expect(";");
   return node;
 }

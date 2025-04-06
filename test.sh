@@ -68,5 +68,8 @@ assert 5 'return 5;
 return 8;'
 assert 10 'returnx = 10;
 return returnx;'
+assert 10 'x = 4;
+x = x * 2 + 2;
+return x;'
 
 echo OK

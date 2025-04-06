@@ -64,6 +64,10 @@ typedef enum {
   ND_NUM,     // Integer
   ND_LVAR,    // Local Variables
   ND_RETURN,
+  TK_IF,
+  TK_ELSE,
+  TK_WHILE,
+  TK_FOR,
 } NodeKind;
 typedef struct Node Node;
 struct Node {
