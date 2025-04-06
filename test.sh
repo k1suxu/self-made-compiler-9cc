@@ -95,8 +95,20 @@ return i;'
 assert 55 'i = 0;
 for (j = 0; j <= 10; j = j + 1) i = i + j;
 return i;'
-assert 15 'i = 0;
+assert 29 'i = 0;
 for (j = 1; j * 2 < 20; j = j * 2) i = i + j;
+if (i == 15) i = i + 4;
+for (j = 0; j < 5; j = j + 1) i = i + j;
+return i;'
+assert 100 'i = 0;
+for (j = 0; j < 5; j = j + 1)
+  for (k = 0; k < 5; k = k + 1)
+    i = i + j * k;
+return i;'
+assert 23 'i = 0;
+for (j = 1; j < 5; j = j + 1)
+  for (k = 0; j * k < 5; k = k + 1)
+    i = i + j * k;
 return i;'
 
 
