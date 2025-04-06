@@ -23,6 +23,7 @@ typedef enum {
   TK_IDENT,    // 識別子 (a-zの１文字変数名)
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
+  TK_RETURN,
 } TokenKind;
 // トークン型
 typedef struct Token Token;
@@ -34,11 +35,13 @@ struct Token {
   int len;        // トークン長
 };
 extern Token *token; // ユーザーインプットのトークン列を表すグローバル変数
+int is_alnumunder(char c);
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize(char *p);
 
 // トークンの読み進め関連
 bool consume(char *op);
+bool consume_kind(TokenKind tk);
 Token *consume_ident();
 void expect(char *op);
 int expect_number();
@@ -60,6 +63,7 @@ typedef enum {
   ND_LE,      // <=
   ND_NUM,     // Integer
   ND_LVAR,    // Local Variables
+  ND_RETURN,
 } NodeKind;
 typedef struct Node Node;
 struct Node {

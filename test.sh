@@ -57,9 +57,16 @@ assert 6 'foo = 1;
 bar = 2 + 3;
 foo + bar;'
 assert 1 'fo_110o = 1;
-_bAr = 2 + 3;
-Hoge_fo = -5;
+_bAr = 2 + 3 * fo_110o;
+Hoge_fo = -_bAr;
 fo_110o + _bAr + Hoge_fo;'
 
+assert 14 'a = 3;
+b = 5 * 6 - 8;
+return a + b / 2;'
+assert 5 'return 5;
+return 8;'
+assert 10 'returnx = 10;
+return returnx;'
 
 echo OK

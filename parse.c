@@ -1,7 +1,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 #include "9cc.h"
+
+int is_alnumunder(char c) {
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
+}
 
 // 新しいトークンを作成してcurに繋げる
 Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
@@ -48,15 +56,23 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    // return
+    if (strncmp(p, "return", 6) == 0 && !is_alnumunder(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     // 英小文字or英大文字or数字orアンダーバーで先頭数字はだめ(isdigitで解釈されるはず)
     // 暫定的に英小文字だけとする
-    if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || *p == '_') {
+    if (is_alnumunder(*p)) {
       char *q = p;
-      while (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z') || ('0' <= *p && *p <= '9') || *p == '_')
+      while (is_alnumunder(*p))
         p++;
       cur = new_token(TK_IDENT, cur, q, p - q);
       continue;
     }
+
     error_at(p, "トークナイズできません");
   }
 
@@ -68,6 +84,13 @@ Token *tokenize(char *p) {
 // 真を返す。それ以外の場合には偽を返す
 bool consume(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+    return false;
+  token = token->next;
+  return true;
+}
+
+bool consume_kind(TokenKind tk) {
+  if (token->kind != tk)
     return false;
   token = token->next;
   return true;
@@ -144,9 +167,16 @@ void program() {
   code[i] = NULL;
 }
 
-// stmt = expr ";"
+// stmt = expr ";" | "return" expr ";"
 Node *stmt() {
-  Node *node = expr();
+  Node *node;
+  if (consume_kind(TK_RETURN)) {
+    node = new_node(ND_RETURN);
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
+
   expect(";");
   return node;
 }
