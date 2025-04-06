@@ -105,6 +105,17 @@ Node *stmt() {
     return node;
   }
 
+  if (consume_kind(TK_IF)) {
+    expect("(");
+    Node *node = expr();
+    expect(")");
+    node = new_node_binary(ND_IF, node, stmt());
+    if (consume_kind(TK_ELSE)) {
+      node->rhs = new_node_binary(ND_ELSE, node->rhs, stmt());
+    }
+    return node;
+  }
+
   Node *node = expr();
   expect(";");
   return node;

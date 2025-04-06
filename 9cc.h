@@ -24,6 +24,10 @@ typedef enum {
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
   TK_RETURN,
+  TK_IF,
+  TK_ELSE,
+  TK_WHILE,
+  TK_FOR,
 } TokenKind;
 // トークン型
 typedef struct Token Token;
@@ -64,10 +68,10 @@ typedef enum {
   ND_NUM,     // Integer
   ND_LVAR,    // Local Variables
   ND_RETURN,
-  TK_IF,
-  TK_ELSE,
-  TK_WHILE,
-  TK_FOR,
+  ND_IF,
+  ND_ELSE,
+  ND_WHILE,
+  ND_FOR,
 } NodeKind;
 typedef struct Node Node;
 struct Node {
@@ -107,3 +111,5 @@ struct LVar {
   int offset;   // rbpからのオフセット
 };
 extern LVar *locals; // ローカル変数辞書を表すグローバル変数
+
+extern int label_count; // labelの末尾につけるXXXXの数字を管理する(今はif, while等すべてに共通して一つの値を使っているが、将来的には各ラベルごとに管理するようにしたい)

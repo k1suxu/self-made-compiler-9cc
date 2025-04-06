@@ -72,4 +72,18 @@ assert 10 'x = 4;
 x = x * 2 + 2;
 return x;'
 
+# if test
+assert 1 'if(5+3-1) return 1; else return 0;'
+assert 0 'if(5+3-8) return 1; else return 0;'
+assert 3 'a = 3; b = 5;
+if (2 * a - b != 0) return a; else return b;'
+assert 3 'a = 3; b = 5;
+if (2 * a - b) return a; else return b;'
+assert 5 'a = 3; b = 5;
+if ((2 * a - b) - 1) return a; else return b;'
+assert 1 'if (1) return 1; else if (1) return 2; else return 3;'
+assert 1 'if (1) return 1; else if (0) return 2; else return 3;'
+assert 2 'if (0) return 1; else if (1) return 2; else return 3;'
+assert 3 'if (0) return 1; else if (0) return 2; else return 3;'
+
 echo OK

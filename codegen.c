@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "9cc.h"
 
+int use_label() {
+  return label_count++;
+}
+
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR)
     error("代入演算の左辺が変数ではありません");
@@ -39,6 +43,27 @@ void gen(Node *node) {
     printf("  pop rbp\n");
     printf("  ret\n");
     return;
+  case ND_IF:
+    if (node->rhs->kind == ND_ELSE) { // if (A) B else C 構文
+      int cur_label_num = use_label();
+      gen(node->lhs);                               // 条件式Aの評価
+      printf("  pop rax\n");                        // 条件式の評価結果の取り出し
+      printf("  cmp rax, 0\n");                     // 0だったらfalse, そうでないならtrue
+      printf("  je .Lelse%d\n", cur_label_num);   // false(=0)なら飛ぶ(jump if equal *0)
+      gen(node->rhs->lhs);                          // Bを生成
+      printf("  jmp .Lend%d\n", cur_label_num);   // Bが終わったらelseを飛ばして次に行く
+      printf(".Lelse%d:\n", cur_label_num);
+      gen(node->rhs->rhs);
+      printf(".Lend%d:\n", cur_label_num);
+    } else { // if (A) B 構文
+      int cur_label_num = use_label();
+      gen(node->lhs);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .Lend%d\n", cur_label_num);
+      gen(node->rhs);
+      printf(".Lend%d:\n", cur_label_num);
+    }
   }
 
 
