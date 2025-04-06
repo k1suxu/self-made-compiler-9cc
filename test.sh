@@ -86,4 +86,18 @@ assert 1 'if (1) return 1; else if (0) return 2; else return 3;'
 assert 2 'if (0) return 1; else if (1) return 2; else return 3;'
 assert 3 'if (0) return 1; else if (0) return 2; else return 3;'
 
+# while test
+assert 16 'i = 1;
+while (i < 10) i = i + i;
+return i;'
+
+# for test
+assert 55 'i = 0;
+for (j = 0; j <= 10; j = j + 1) i = i + j;
+return i;'
+assert 15 'i = 0;
+for (j = 1; j * 2 < 20; j = j * 2) i = i + j;
+return i;'
+
+
 echo OK

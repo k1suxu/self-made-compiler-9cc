@@ -80,6 +80,16 @@ struct Node {
   Node *rhs;
   int val;        // kind=ND_NUMの時のみ使う
   int offset;     // kind=ND_LVALの時のみ使う(変数アクセス用のRSPからのオフセット)
+
+  // "if" ( cond ) then "else" els
+  // "for" ( init; cond; inc ) body
+  // "while" ( cond ) body
+  Node *cond;
+  Node *then;
+  Node *els;
+  Node *init;
+  Node *inc;
+  Node *body;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);

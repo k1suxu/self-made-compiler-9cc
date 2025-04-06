@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "9cc.h"
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
@@ -107,12 +108,35 @@ Node *stmt() {
 
   if (consume_kind(TK_IF)) {
     expect("(");
-    Node *node = expr();
+    Node *node = new_node(ND_IF);
+    node->cond = expr();
     expect(")");
-    node = new_node_binary(ND_IF, node, stmt());
+    node->body = stmt();
     if (consume_kind(TK_ELSE)) {
-      node->rhs = new_node_binary(ND_ELSE, node->rhs, stmt());
+      node->els = stmt();
     }
+    return node;
+  }
+
+  if (consume_kind(TK_WHILE)) {
+    expect("(");
+    Node *node = new_node(ND_WHILE);
+    node->cond = expr();
+    expect(")");
+    node->body = stmt();
+    return node;
+  }
+
+  if (consume_kind(TK_FOR)) {
+    expect("(");
+    Node *node = new_node(ND_FOR);
+    node->init = expr(); 
+    expect(";");
+    node->cond = expr();
+    expect(";");
+    node->inc = expr();
+    expect(")");
+    node->body = stmt();
     return node;
   }
 
