@@ -83,10 +83,19 @@ LVar *find_lvar(Token *tok) {
 
 // program = stmt*
 void program() {
-  int i = 0;
-  while (!at_eof())
-    code[i++] = stmt();
-  code[i] = NULL;
+  if (at_eof()) return;
+
+  codes = calloc(1, sizeof(NodeLink));
+  code_head = codes;
+  codes->cur = stmt();
+  codes->next = NULL;
+
+  while (!at_eof()) {
+    codes->next = calloc(1, sizeof(NodeLink));
+    codes = codes->next;
+    codes->cur = stmt();
+    codes->next = NULL;
+  }
 }
 
 /*

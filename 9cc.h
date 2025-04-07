@@ -96,7 +96,13 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
 // 抽象構文木生成過程
-extern Node *code[100]; // セミコロン区切りの複数式のトップノードを保存
+typedef struct NodeLink NodeLink;
+struct NodeLink {
+  Node *cur;
+  NodeLink *next;
+};
+extern NodeLink *code_head;
+extern NodeLink *codes;
 void program();
 Node *stmt();
 Node *expr();
