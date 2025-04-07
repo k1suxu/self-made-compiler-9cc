@@ -81,8 +81,6 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
-Node *code[100];
-
 // program = stmt*
 void program() {
   int i = 0;

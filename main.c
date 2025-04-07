@@ -7,6 +7,9 @@ char *user_input;
 LVar *locals;
 int label_count = 1;
 
+// セミコロン区切りのコード
+Node *code[100];
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("引数の個数が正しくありません");
