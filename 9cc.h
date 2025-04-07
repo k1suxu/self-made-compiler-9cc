@@ -90,6 +90,7 @@ typedef enum {
   ND_ELSE,
   ND_WHILE,
   ND_FOR,
+  ND_BLOCK,
 } NodeKind;
 
 struct Node {
@@ -108,6 +109,9 @@ struct Node {
   Node *init;
   Node *inc;
   Node *body;
+
+  // { multiStmt[0]; multiStmt[1]; ...}
+  NodeQueue *multiStmt;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);

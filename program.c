@@ -96,8 +96,16 @@ stmt =    expr ";"
         | "if" "(" expr ")" stmt ("else" stmt)?
         | "while" "(" expr ")" stmt
         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
- */ 
+ */
 Node *stmt() {
+  if (consume("{")) {
+    Node *node = new_node(ND_BLOCK);
+    node->multiStmt = nodeQueNew();
+    while (!consume("}"))
+      nodeQuePush(node->multiStmt, stmt());
+    return node;
+  }
+
   if (consume_kind(TK_RETURN)) {
     Node *node = new_node(ND_RETURN);
     node->lhs = expr();

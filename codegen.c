@@ -18,6 +18,15 @@ void gen_lval(Node *node) {
 
 void gen(Node *node) {
   switch (node->kind) {
+    case ND_BLOCK: {
+      while (!nodeQueIsEmpty(node->multiStmt)) {
+        gen(nodeQueTop(node->multiStmt));
+        nodeQuePop(node->multiStmt);
+        printf("  pop rax\n"); // (最終演算結果は要らない)
+      }
+      return;
+    }
+
     case ND_NUM: {
       printf("  push %d\n", node->val);
       return;
