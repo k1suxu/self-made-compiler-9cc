@@ -8,8 +8,7 @@ LVar *locals;
 int label_count = 1;
 
 // セミコロン区切りのコード
-NodeLink *code_head;
-NodeLink *codes;
+NodeQueue *codes;
 
 int main(int argc, char **argv) {
   if (argc != 2) {
@@ -34,9 +33,9 @@ int main(int argc, char **argv) {
   printf("  sub rsp, 208\n"); // 26 * 8 = 208
 
   // 先頭の式から順にコード生成
-  while (code_head) {
-    gen(code_head->cur);
-    code_head = code_head->next;
+  while (!nodeQueIsEmpty(codes)) {
+    gen(nodeQueTop(codes));
+    nodeQuePop(codes);
 
     printf("  pop rax\n");
   }

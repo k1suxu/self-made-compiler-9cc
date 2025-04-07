@@ -54,7 +54,25 @@ bool at_eof();
 // 便利関数
 bool startswith(char *p, char *q);
 
-// 数式解釈
+// 抽象構文木生成過程
+typedef struct Node Node;
+typedef struct NodeLinkList NodeLinkList;
+typedef struct NodeQueue NodeQueue;
+struct NodeLinkList {
+  Node *cur;
+  NodeLinkList *next;
+};
+struct NodeQueue {
+  NodeLinkList *front;
+  NodeLinkList *back;
+};
+NodeQueue *nodeQueNew();
+bool nodeQueIsEmpty(NodeQueue *q);
+void nodeQuePush(NodeQueue *q, Node *cur);
+Node *nodeQueTop(NodeQueue *q);
+void *nodeQuePop(NodeQueue *q);
+extern NodeQueue *codes;
+
 typedef enum {
   ND_ADD,     // +
   ND_SUB,     // -
@@ -73,7 +91,7 @@ typedef enum {
   ND_WHILE,
   ND_FOR,
 } NodeKind;
-typedef struct Node Node;
+
 struct Node {
   NodeKind kind;
   Node *lhs;
@@ -95,14 +113,6 @@ Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
-// 抽象構文木生成過程
-typedef struct NodeLink NodeLink;
-struct NodeLink {
-  Node *cur;
-  NodeLink *next;
-};
-extern NodeLink *code_head;
-extern NodeLink *codes;
 void program();
 Node *stmt();
 Node *expr();
