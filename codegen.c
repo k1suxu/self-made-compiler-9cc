@@ -97,7 +97,7 @@ void gen(Node *node) {
       return;
     }
 
-    case ND_FOR: { // for(A; B; C) D
+    case ND_FOR: { // for (A; B; C) D
       int cur_label_num = use_label();
       gen(node->init);
       printf(".Lbegin%d:\n", cur_label_num);

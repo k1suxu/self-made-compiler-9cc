@@ -169,7 +169,7 @@ Node *assign() {
 Node *equality() {
   Node *node = relational();
 
-  for(;;) {
+  for (;;) {
     if (consume("==")) 
       node = new_node_binary(ND_EQ, node, relational());
     else if (consume("!=")) 
@@ -182,7 +182,7 @@ Node *equality() {
 Node *relational() {
   Node *node = add();
 
-  for(;;) {
+  for (;;) {
     if (consume("<")) 
       node = new_node_binary(ND_LT, node, add());
     else if (consume("<=")) 
@@ -199,7 +199,7 @@ Node *relational() {
 Node *add() {
   Node *node = mul();
 
-  for(;;) {
+  for (;;) {
     if (consume("+"))
       node = new_node_binary(ND_ADD, node, mul());
     else if (consume("-"))
