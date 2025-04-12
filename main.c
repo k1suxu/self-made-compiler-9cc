@@ -22,27 +22,25 @@ int main(int argc, char **argv) {
   program();
 
   // アセンブリの前半部分を出力
-  printf(".intel_syntax noprefix\n");
-  printf(".globl main\n");
-  printf("main:\n");
+  printLabel(".intel_syntax noprefix");
+  printLabel(".globl main");
+  printLabel("main:");
 
   // プロローグ
-  // 変数26個分の領域を確保する
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n"); // 26 * 8 = 208
+  // ローカル変数26個分の領域を確保する
+  printAssembly("push rbp");
+  printAssembly("mov rbp, rsp");
+  printAssembly("sub rsp, 208"); // 26 * 8 = 208
 
   // 先頭の式から順にコード生成
-  while (!nodeQueIsEmpty(codes)) {
-    gen(nodeQueTop(codes));
-    nodeQuePop(codes);
-
-    printf("  pop rax\n");
+  for (NodeLinkList *code = codes->front; code; code = code->next) {
+    gen(code->cur);
+    printAssembly("pop rax");
   }
 
   // エピローグ
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n"); // 最後の式の結果がRAXに残っているのでそれが返り値になる
+  printAssembly("mov rsp, rbp");
+  printAssembly("pop rbp");
+  printAssembly("ret"); // 最後の式の結果がRAXに残っているのでそれが返り値になる
   return 0;
 }

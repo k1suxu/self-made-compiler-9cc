@@ -230,7 +230,9 @@ Node *unary() {
     return new_node_binary(ND_SUB, new_node_num(0), primary());
   return primary();
 }
-// primary = num | ident | "(" expr ")"
+// primary =  num
+//         | ident ("(" (assignment ",")* ")")?
+//         | "(" expr ")"
 Node *primary() {
   // 次のトークンが "(" なら、 "(" expr ")"のはず
   if (consume("(")) {
@@ -241,6 +243,25 @@ Node *primary() {
 
   Token *tok = consume_ident();
   if (tok) {
+    if (consume("(")) { // 関数呼び出し
+      Node *node = new_node(ND_FUNC_CALL);
+      node->funcName = calloc(tok->len, sizeof(char));
+      strncpy(node->funcName, tok->str, tok->len);
+      node->args = nodeQueNew();
+      
+      if (!consume(")")) {
+        while (1) {
+          nodeQuePush(node->args, assign());
+          if (consume(")")) {
+            break;
+          }
+          expect(",");
+        }
+      }
+
+      return node;
+    }
+
     Node *node = new_node(ND_LVAR);
     
     LVar *lvar = find_lvar(tok);

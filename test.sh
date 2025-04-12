@@ -1,4 +1,30 @@
 #!/bin/bash
+echo "#include<stdio.h>
+int foo() {
+  return 10;
+}
+int hoge(int a, int b) {
+  return a + b;
+}" > tmpDecl.c
+cc -c tmpDecl.c -o tmpDecl.o
+
+assert_with() {
+  expected="$1"
+  input="$2"
+
+  ./9cc "$input" > tmp.s
+  cc -o tmp tmp.s tmpDecl.o
+  ./tmp
+  actual="$?"
+
+  if [ "$actual" = "$expected" ]; then
+    echo "$input => $actual"
+  else
+    echo "$input => $expected expected, but got $actual"
+    exit 1
+  fi
+}
+
 assert() {
   expected="$1"
   input="$2"
@@ -85,6 +111,11 @@ assert 1 'if (1) return 1; else if (1) return 2; else return 3;'
 assert 1 'if (1) return 1; else if (0) return 2; else return 3;'
 assert 2 'if (0) return 1; else if (1) return 2; else return 3;'
 assert 3 'if (0) return 1; else if (0) return 2; else return 3;'
+assert 3 'if (0) {
+return 1;
+}else if (0) {
+return 2;} else return 3;
+'
 
 # while test
 assert 16 'i = 1;
@@ -148,6 +179,10 @@ for (j = 0; j < 4; j = j + 1) {
 }
 return i;
 '
+
+assert_with 10 'return foo();'
+assert_with 15 'return hoge(5,10);'
+assert_with 30 'return hoge(foo(),foo()) + foo();'
 
 
 echo OK

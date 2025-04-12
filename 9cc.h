@@ -91,6 +91,7 @@ typedef enum {
   ND_WHILE,
   ND_FOR,
   ND_BLOCK,
+  ND_FUNC_CALL,
 } NodeKind;
 
 struct Node {
@@ -112,6 +113,10 @@ struct Node {
 
   // { multiStmt[0]; multiStmt[1]; ...}
   NodeQueue *multiStmt;
+
+  // for func call
+  char *funcName;
+  NodeQueue *args;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
@@ -129,6 +134,9 @@ Node *unary();
 Node *primary();
 
 // アセンブリ生成
+int use_label();
+void printLabel(char *fmt, ...);
+void printAssembly(char *fmt, ...);
 void gen_lval(Node *node);
 void gen(Node *node);
 
