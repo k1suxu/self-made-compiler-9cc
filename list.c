@@ -5,6 +5,7 @@ List *listNew() {
   List *q = calloc(1, sizeof(List));
   q->front = NULL;
   q->back = NULL;
+  q->size = 0;
 }
 
 bool listIsEmpty(List *q) {
@@ -19,9 +20,11 @@ void listPush(List *q, void *cur) {
   if (listIsEmpty(q)) {
     q->front = newDatum;
     q->back = newDatum;
+    q->size = 1;
   } else {
     q->back->next = newDatum;
     q->back = newDatum;
+    ++(q->size);
   }
 }
 
@@ -39,7 +42,12 @@ void *listPop(List *q) {
   }
 
   q->front = q->front->next;
+  --(q->size);
   if (q->front == NULL) {
     q->back = NULL;
   }
+}
+
+int listSize(List *q) {
+  return q->size;
 }

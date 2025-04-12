@@ -65,12 +65,14 @@ struct ListDatum {
 struct List {
   ListDatum *front;
   ListDatum *back;
+  int size;
 };
 List *listNew();
 bool listIsEmpty(List *q);
 void listPush(List *q, void *cur);
 void *listTop(List *q);
 void *listPop(List *q);
+int listSize(List *q);
 extern List *codes;
 
 typedef enum {
