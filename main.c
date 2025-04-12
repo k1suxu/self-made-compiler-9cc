@@ -8,7 +8,7 @@ LVar *locals;
 int label_count = 1;
 
 // セミコロン区切りのコード
-Vector *codes;
+List *codes;
 
 int main(int argc, char **argv) {
   if (argc != 2) {
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
   printAssembly("sub rsp, 208"); // 26 * 8 = 208
 
   // 先頭の式から順にコード生成
-  for (VectorDatum *code = codes->front; code; code = code->next) {
+  for (ListDatum *code = codes->front; code; code = code->next) {
     gen(code->cur);
     printAssembly("pop rax");
   }
