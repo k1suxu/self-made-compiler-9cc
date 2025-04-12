@@ -84,9 +84,9 @@ LVar *find_lvar(Token *tok) {
 
 // program = stmt*
 void program() {
-  codes = vecNew();
+  codes = listNew();
   while (!at_eof())
-    vecPush(codes, stmt());
+    listPush(codes, stmt());
 }
 
 /*
@@ -100,9 +100,9 @@ stmt =    expr ";"
 Node *stmt() {
   if (consume("{")) {
     Node *node = new_node(ND_BLOCK);
-    node->multiStmt = vecNew();
+    node->multiStmt = listNew();
     while (!consume("}"))
-      vecPush(node->multiStmt, stmt());
+      listPush(node->multiStmt, stmt());
     return node;
   }
 
@@ -247,11 +247,11 @@ Node *primary() {
       Node *node = new_node(ND_FUNC_CALL);
       node->funcName = calloc(tok->len, sizeof(char));
       strncpy(node->funcName, tok->str, tok->len);
-      node->args = vecNew();
+      node->args = listNew();
       
       if (!consume(")")) {
         while (1) {
-          vecPush(node->args, assign());
+          listPush(node->args, assign());
           if (consume(")")) {
             break;
           }

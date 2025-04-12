@@ -66,11 +66,11 @@ struct List {
   ListDatum *front;
   ListDatum *back;
 };
-List *vecNew();
-bool vecIsEmpty(List *q);
-void vecPush(List *q, void *cur);
-void *vecTop(List *q);
-void *vecPop(List *q);
+List *listNew();
+bool listIsEmpty(List *q);
+void listPush(List *q, void *cur);
+void *listTop(List *q);
+void *listPop(List *q);
 extern List *codes;
 
 typedef enum {

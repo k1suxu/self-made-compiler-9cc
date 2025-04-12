@@ -1,22 +1,22 @@
 #include <stdlib.h>
 #include "9cc.h"
 
-List *vecNew() {
+List *listNew() {
   List *q = calloc(1, sizeof(List));
   q->front = NULL;
   q->back = NULL;
 }
 
-bool vecIsEmpty(List *q) {
+bool listIsEmpty(List *q) {
   return q->front == NULL;
 }
 
-void vecPush(List *q, void *cur) {
+void listPush(List *q, void *cur) {
   ListDatum *newDatum = calloc(1, sizeof(ListDatum));
   newDatum->cur = cur;
   newDatum->next = NULL;
 
-  if (vecIsEmpty(q)) {
+  if (listIsEmpty(q)) {
     q->front = newDatum;
     q->back = newDatum;
   } else {
@@ -25,16 +25,16 @@ void vecPush(List *q, void *cur) {
   }
 }
 
-void *vecTop(List *q) {
-  if (vecIsEmpty(q)) {
+void *listTop(List *q) {
+  if (listIsEmpty(q)) {
     error("List is Empty (top) !!\n");
   }
 
   return q->front->cur;
 }
 
-void *vecPop(List *q) {
-  if (vecIsEmpty(q)) {
+void *listPop(List *q) {
+  if (listIsEmpty(q)) {
     error("List is Empty (pop) !!\n");
   }
 
