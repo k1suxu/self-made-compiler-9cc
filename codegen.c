@@ -36,7 +36,7 @@ void gen_lval(Node *node) {
 void gen(Node *node) {
   switch (node->kind) {
     case ND_BLOCK: {
-      for (NodeLinkList *q = node->multiStmt->front; q; q = q->next) {
+      for (VectorDatum *q = node->multiStmt->front; q; q = q->next) {
         gen(q->cur);
         printAssembly("pop rax"); // (最終演算結果は要らない)
       }
@@ -45,7 +45,7 @@ void gen(Node *node) {
 
     case ND_FUNC_CALL: {
       int cnt = 0;
-      for (NodeLinkList *arg = node->args->front; arg; arg = arg->next) {
+      for (VectorDatum *arg = node->args->front; arg; arg = arg->next) {
         if (cnt == 6) {
           error("7つ以上の引数は指定できません");
         }

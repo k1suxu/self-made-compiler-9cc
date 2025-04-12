@@ -84,9 +84,9 @@ LVar *find_lvar(Token *tok) {
 
 // program = stmt*
 void program() {
-  codes = nodeQueNew();
+  codes = vecNew();
   while (!at_eof())
-    nodeQuePush(codes, stmt());
+    vecPush(codes, stmt());
 }
 
 /*
@@ -100,9 +100,9 @@ stmt =    expr ";"
 Node *stmt() {
   if (consume("{")) {
     Node *node = new_node(ND_BLOCK);
-    node->multiStmt = nodeQueNew();
+    node->multiStmt = vecNew();
     while (!consume("}"))
-      nodeQuePush(node->multiStmt, stmt());
+      vecPush(node->multiStmt, stmt());
     return node;
   }
 
@@ -247,11 +247,11 @@ Node *primary() {
       Node *node = new_node(ND_FUNC_CALL);
       node->funcName = calloc(tok->len, sizeof(char));
       strncpy(node->funcName, tok->str, tok->len);
-      node->args = nodeQueNew();
+      node->args = vecNew();
       
       if (!consume(")")) {
         while (1) {
-          nodeQuePush(node->args, assign());
+          vecPush(node->args, assign());
           if (consume(")")) {
             break;
           }

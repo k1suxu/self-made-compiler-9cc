@@ -56,22 +56,22 @@ bool startswith(char *p, char *q);
 
 // 抽象構文木生成過程
 typedef struct Node Node;
-typedef struct NodeLinkList NodeLinkList;
-typedef struct NodeQueue NodeQueue;
-struct NodeLinkList {
-  Node *cur;
-  NodeLinkList *next;
+typedef struct VectorDatum VectorDatum;
+typedef struct Vector Vector;
+struct VectorDatum {
+  void *cur;
+  VectorDatum *next;
 };
-struct NodeQueue {
-  NodeLinkList *front;
-  NodeLinkList *back;
+struct Vector {
+  VectorDatum *front;
+  VectorDatum *back;
 };
-NodeQueue *nodeQueNew();
-bool nodeQueIsEmpty(NodeQueue *q);
-void nodeQuePush(NodeQueue *q, Node *cur);
-Node *nodeQueTop(NodeQueue *q);
-void *nodeQuePop(NodeQueue *q);
-extern NodeQueue *codes;
+Vector *vecNew();
+bool vecIsEmpty(Vector *q);
+void vecPush(Vector *q, void *cur);
+void *vecTop(Vector *q);
+void *vecPop(Vector *q);
+extern Vector *codes;
 
 typedef enum {
   ND_ADD,     // +
@@ -112,11 +112,11 @@ struct Node {
   Node *body;
 
   // { multiStmt[0]; multiStmt[1]; ...}
-  NodeQueue *multiStmt;
+  Vector *multiStmt;
 
   // for func call
   char *funcName;
-  NodeQueue *args;
+  Vector *args;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
