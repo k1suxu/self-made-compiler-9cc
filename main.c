@@ -7,7 +7,6 @@ char *user_input;
 LVar *locals;
 int label_count = 1;
 
-// セミコロン区切りのコード
 List *codes;
 
 int main(int argc, char **argv) {
@@ -24,23 +23,22 @@ int main(int argc, char **argv) {
   // アセンブリの前半部分を出力
   printLabel(".intel_syntax noprefix");
   printLabel(".globl main");
-  printLabel("main:");
+  // printLabel("main:");
 
-  // プロローグ
-  // ローカル変数26個分の領域を確保する
-  printAssembly("push rbp");
-  printAssembly("mov rbp, rsp");
-  printAssembly("sub rsp, 208"); // 26 * 8 = 208
+  // // プロローグ
+  // // ローカル変数26個分の領域を確保する
+  // printAssembly("push rbp");
+  // printAssembly("mov rbp, rsp");
+  // printAssembly("sub rsp, 208"); // 26 * 8 = 208
 
   // 先頭の式から順にコード生成
   for (ListDatum *code = codes->front; code; code = code->next) {
-    gen(code->cur);
-    printAssembly("pop rax");
+    gen_func(code->cur);
   }
 
   // エピローグ
-  printAssembly("mov rsp, rbp");
-  printAssembly("pop rbp");
-  printAssembly("ret"); // 最後の式の結果がRAXに残っているのでそれが返り値になる
+  // printAssembly("mov rsp, rbp");
+  // printAssembly("pop rbp");
+  // printAssembly("ret"); // 最後の式の結果がRAXに残っているのでそれが返り値になる
   return 0;
 }

@@ -23,6 +23,7 @@ void printAssembly(char *fmt, ...) {
   printf("\n");
 }
 
+// スタック位置を示す値をraxに入れてpush
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR)
     error("代入演算の左辺が変数ではありません");
@@ -208,4 +209,41 @@ void gen(Node *node) {
   }
 
   printAssembly("push rax"); // 最終演算結果をスタックにpush
+}
+
+void gen_func(Function *func) {
+  if (func->argc > 6) {
+    error("7つ以上の引数をもつ関数の定義はサポートされていません");
+  }
+  
+  // プロローグ
+  printLabel("%s:", func->funcName);
+  printAssembly("push rbp");
+  printAssembly("mov rbp, rsp");
+  printAssembly("sub rsp, %d", func->stackSize);
+
+  {
+    ListDatum *ld = func->locals->front;
+    for (int cnt = 0; cnt < func->argc; cnt++) {
+      LVar *lvar = ld->cur;
+      printAssembly("mov rax, rbp");
+      printAssembly("sub rax, %d", lvar->offset);
+      printAssembly("mov [rax], %s", argRegisters[cnt]);
+      ld = ld->next;
+    }
+  }
+
+  {
+    ListDatum *ld = func->roots->front;
+    for ( ; ld; ld = ld->next) {
+      Node *cur = ld->cur;
+      gen(cur);
+      printAssembly("pop rax"); // 最終結果をpop (return文が伴ってるならいらないけど既存のテストのパスのために一応残してる)
+    }
+  }
+
+  // エピローグ (return文を強制しちゃえばもうこれ要らないけど既存のテストのパスのために一応残してる)
+  printAssembly("mov rsp, rbp");
+  printAssembly("pop rbp");
+  printAssembly("ret");
 }

@@ -49,10 +49,6 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
-bool startswith(char *p, char *q) {
-  return memcmp(p, q, strlen(q)) == 0;
-}
-
 // なんでも
 Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
@@ -75,18 +71,70 @@ Node *new_node_num(int val) {
 
 // ローカル変数名検索(見つからなかった場合はNULL)
 LVar *find_lvar(Token *tok) {
-  for (LVar *var = locals; var; var = var->next) {
-    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-      return var;
+  Function *cur_func = codes->back->cur;
+  for (ListDatum *ld = cur_func->locals->front; ld; ld = ld->next) {
+    LVar *lvar = ld->cur;
+    if (lvar->len == tok->len && !memcmp(tok->str, lvar->name, lvar->len))
+      return lvar;
   }
   return NULL;
 }
 
-// program = stmt*
+// program = func*;
 void program() {
   codes = listNew();
   while (!at_eof())
-    listPush(codes, stmt());
+    func();
+}
+
+// func = func_name "(" (arg ("," arg)*)? ")" "{" stmt* "}"
+Function *func() {
+  Function *cur = calloc(1, sizeof(Function));
+  listPush(codes, cur);
+  Token *tok = consume_ident();
+  if (!tok) {
+    error("パース時のトップレベルは関数宣言でないといけません");
+  }
+  expect("(");
+  cur->funcName = calloc(tok->len, sizeof(char));
+  strncpy(cur->funcName, tok->str, tok->len);
+  cur->locals = listNew();
+  cur->stackSize = 0;
+
+  if (!consume(")")) {
+    while (1) {
+      Token *arg_tok = consume_ident();
+      if (!arg_tok) {
+        error("引数が変数名ではありません");
+      }
+      LVar *found = find_lvar(arg_tok);
+      if (found) {
+        error("引数名が重複しています");
+      }
+      found = calloc(1, sizeof(LVar));
+      found->name = arg_tok->str;
+      found->len = arg_tok->len;
+      found->offset = (cur->stackSize + 8); // 8バイト固定
+      cur->stackSize += 8;
+      (cur->argc)++;
+      listPush(cur->locals, found);
+
+      if (consume(")"))
+        break;
+      expect(",");
+    }
+  }
+
+  expect("{");
+  cur->roots = listNew();
+  while (!consume("}")) {
+    Node *statement = stmt();
+    listPush(cur->roots, statement);
+  }
+
+  cur->stackSize = round_up(cur->stackSize, 16);
+
+  return cur;
 }
 
 /*
@@ -231,7 +279,7 @@ Node *unary() {
   return primary();
 }
 // primary =  num
-//         | ident ("(" (assignment ",")* ")")?
+//         | ident ("(" (assign ("," assign)*)? ")")?
 //         | "(" expr ")"
 Node *primary() {
   // 次のトークンが "(" なら、 "(" expr ")"のはず
@@ -252,9 +300,8 @@ Node *primary() {
       if (!consume(")")) {
         while (1) {
           listPush(node->args, assign());
-          if (consume(")")) {
+          if (consume(")"))
             break;
-          }
           expect(",");
         }
       }
@@ -269,12 +316,13 @@ Node *primary() {
       node->offset = lvar->offset;
     } else {
       lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
       lvar->name = tok->str;
       lvar->len = tok->len;
-      lvar->offset = (locals? locals->offset : 0) + 8; // 8バイト固定
+      Function *code_back = codes->back->cur;
+      lvar->offset = (code_back->stackSize + 8); // 8バイト固定
+      code_back->stackSize += 8;
       node->offset = lvar->offset;
-      locals = lvar; // localsにlvarを先頭要素として追加(これは時間的局所性にも適合する)
+      listPush(code_back->locals, lvar);
     }
 
     return node;

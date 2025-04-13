@@ -53,9 +53,11 @@ bool at_eof();
 
 // 便利関数
 bool startswith(char *p, char *q);
+int round_up(int x, int align);
 
 // 抽象構文木生成過程
-typedef struct Node Node;
+
+// オブジェクト以外の単一リテラル用リスト構造体
 typedef struct ListDatum ListDatum;
 typedef struct List List;
 struct ListDatum {
@@ -73,7 +75,6 @@ void listPush(List *q, void *cur);
 void *listTop(List *q);
 void *listPop(List *q);
 int listSize(List *q);
-extern List *codes;
 
 typedef enum {
   ND_ADD,     // +
@@ -96,6 +97,7 @@ typedef enum {
   ND_FUNC_CALL,
 } NodeKind;
 
+typedef struct Node Node;
 struct Node {
   NodeKind kind;
   Node *lhs;
@@ -124,7 +126,10 @@ Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 
+typedef struct Function Function;
+
 void program();
+Function *func();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -141,15 +146,27 @@ void printLabel(char *fmt, ...);
 void printAssembly(char *fmt, ...);
 void gen_lval(Node *node);
 void gen(Node *node);
+void gen_func(Function *func);
 
 // ローカル変数の型
 typedef struct LVar LVar;
 struct LVar {
-  LVar *next;   // 次の変数 or NULL (連結リストで変数辞書を表す)
+  // LVar *next;   // 次の変数 or NULL (連結リストで変数辞書を表す)
   char *name;   // 変数名
   int len;      // 変数名の長さ
   int offset;   // rbpからのオフセット
 };
-extern LVar *locals; // ローカル変数辞書を表すグローバル変数
+// extern LVar *locals; // ローカル変数辞書を表すグローバル変数
 
 extern int label_count; // labelの末尾につけるXXXXの数字を管理する(今はif, while等すべてに共通して一つの値を使っているが、将来的には各ラベルごとに管理するようにしたい)
+
+struct Function {
+  List *roots;     // 抽象構文木のroot node  // list of Node*
+  List *locals;   // ローカル変数それぞれのオフセットなど // list of LVar*
+  // List *args;  // 引数それぞれのオフセットなど(LVarと同様にする予定)
+  int argc;
+  char *funcName;
+  int stackSize;
+};
+int cal_stack_size(Function *f);
+extern List *codes; // list of Function*
