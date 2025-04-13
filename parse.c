@@ -125,6 +125,7 @@ Function *func() {
     }
   }
 
+  // stmtでやると{}に囲まれない一行処理とかがコンパイルを通ってしまう気がしている
   expect("{");
   cur->roots = listNew();
   while (!consume("}")) {
