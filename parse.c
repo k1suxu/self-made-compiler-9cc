@@ -100,7 +100,7 @@ Function *func() {
   listPush(codes, cur);
   Token *tok = consume_ident();
   if (!tok) {
-    error("パース時のトップレベルは関数宣言でないといけません");
+    error_at(tok->str, "パース時のトップレベルは関数宣言でないといけません");
   }
   expect("(");
   cur->funcName = calloc(tok->len, sizeof(char));
@@ -112,11 +112,11 @@ Function *func() {
     while (1) {
       Token *arg_tok = consume_ident();
       if (!arg_tok) {
-        error("引数が変数名ではありません");
+        error_at(arg_tok->str, "引数が変数名ではありません");
       }
       LVar *found = find_lvar(arg_tok);
       if (found) {
-        error("引数名が重複しています");
+        error_at(arg_tok->str, "引数名が重複しています");
       }
       found = calloc(1, sizeof(LVar));
       found->name = arg_tok->str;
