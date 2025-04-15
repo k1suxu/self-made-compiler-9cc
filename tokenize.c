@@ -91,6 +91,13 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    // int
+    if (strncmp(p, "int", 3) == 0 && !is_alnumunder(p[3])) {
+      cur = new_token(TK_INT, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
     // 英小文字or英大文字or数字orアンダーバーで先頭数字はだめ(isdigitで解釈されるはず)
     // 暫定的に英小文字だけとする
     if (is_alnumunder(*p)) {

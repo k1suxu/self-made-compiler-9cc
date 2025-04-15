@@ -78,6 +78,9 @@ Node *new_node_num(int val) {
 
 // ローカル変数名検索(見つからなかった場合はNULL)
 LVar *find_lvar(Token *tok) {
+  if (tok->kind != TK_IDENT) {
+    error_at(tok->str, "`find_lvar` 関数が呼ばれましたが、引数が TK_IDENT ではありません");
+  }
   Function *cur_func = codes->back->cur;
   for (ListDatum *ld = cur_func->locals->front; ld; ld = ld->next) {
     LVar *lvar = ld->cur;
@@ -96,12 +99,18 @@ void program() {
 
 // func = func_name "(" (arg ("," arg)*)? ")" "{" stmt* "}"
 Function *func() {
-  Function *cur = calloc(1, sizeof(Function));
-  listPush(codes, cur);
+  if (!consume_kind(TK_INT)) {
+    error_at(token->str, "返り値の型は省略できません");
+  }
+
   Token *tok = consume_ident();
   if (!tok) {
-    error_at(tok->str, "パース時のトップレベルは関数宣言でないといけません");
+    error_at(token->str, "パース時のトップレベルは関数宣言でないといけません");
   }
+
+  Function *cur = calloc(1, sizeof(Function));
+  listPush(codes, cur);
+  
   expect("(");
   cur->funcName = calloc(tok->len, sizeof(char));
   strncpy(cur->funcName, tok->str, tok->len);
@@ -110,9 +119,13 @@ Function *func() {
 
   if (!consume(")")) {
     while (1) {
+      if (!consume_kind(TK_INT)) {
+        error_at(token->str, "引数の型は省略できません");
+      }
+
       Token *arg_tok = consume_ident();
       if (!arg_tok) {
-        error_at(arg_tok->str, "引数が変数名ではありません");
+        error_at(token->str, "引数が変数名ではありません");
       }
       LVar *found = find_lvar(arg_tok);
       if (found) {
@@ -147,6 +160,7 @@ Function *func() {
 
 /*
 stmt =    expr ";"
+        | "int" [VAR_NAME] ";"
         | "{" stmt* "}"
         | "return" expr ";"
         | "if" "(" expr ")" stmt ("else" stmt)?
@@ -154,6 +168,35 @@ stmt =    expr ";"
         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
  */
 Node *stmt() {
+  if (consume_kind(TK_INT)) {
+    Token *tok = consume_ident();
+    if (!tok) {
+      error_at(token->str, "int の後は変数名が来るべきですが、%.*sが書かれています", tok->len, tok->str);
+    }
+    LVar *lvar = find_lvar(tok);
+
+    if (lvar) {
+      error_at(tok->str, "Redeclaration of %.*s", tok->len, tok->str);
+    }
+
+    lvar = calloc(1, sizeof(LVar));
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    Function *code_back = codes->back->cur;
+    lvar->offset = (code_back->stackSize + 8); // 8バイト固定
+    code_back->stackSize += 8;
+    listPush(code_back->locals, lvar);
+
+    Node *node = new_node(ND_VAR_DEF);
+    node->offset = lvar->offset;
+    node->varName = calloc(lvar->len, sizeof(char));
+    strncpy(node->varName, tok->str, tok->len);
+
+    expect(";");
+    
+    return node;
+  }
+
   if (consume("{")) {
     Node *node = new_node(ND_BLOCK);
     node->multiStmt = listNew();
@@ -327,14 +370,7 @@ Node *primary() {
     if (lvar) {
       node->offset = lvar->offset;
     } else {
-      lvar = calloc(1, sizeof(LVar));
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      Function *code_back = codes->back->cur;
-      lvar->offset = (code_back->stackSize + 8); // 8バイト固定
-      code_back->stackSize += 8;
-      node->offset = lvar->offset;
-      listPush(code_back->locals, lvar);
+      error_at(tok->str, "Undefined Error: %.*s", tok->len, tok->str);
     }
 
     return node;

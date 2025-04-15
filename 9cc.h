@@ -28,6 +28,7 @@ typedef enum {
   TK_ELSE,
   TK_WHILE,
   TK_FOR,
+  TK_INT,
 } TokenKind;
 // トークン型
 typedef struct Token Token;
@@ -97,6 +98,7 @@ typedef enum {
   ND_FOR,
   ND_BLOCK,
   ND_FUNC_CALL,
+  ND_VAR_DEF,
 } NodeKind;
 
 typedef struct Node Node;
@@ -123,6 +125,9 @@ struct Node {
   // for func call
   char *funcName;
   List *args;
+
+  // var def
+  char *varName;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);

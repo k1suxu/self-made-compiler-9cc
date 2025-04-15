@@ -19,6 +19,7 @@ void printAssembly(char *fmt, ...) {
   // rspの値はpush, popの他、sub rsp, ***等でも変化する可能性があるが、現状、***の方も16-alignされているので、push, popのみを評価する形にしても問題ない
   if (startswith(fmt, "push")) rsp += 1;
   if (startswith(fmt, "pop")) rsp -= 1;
+
   va_list ap;
   va_start(ap, fmt);
   printf("\t");
@@ -75,6 +76,11 @@ void gen(Node *node) {
 
     case ND_NUM: {
       printAssembly("push %d", node->val);
+      return;
+    }
+
+    case ND_VAR_DEF: {
+      printAssembly("sub rsp, 8"); // 最終結果をpopが起こるため、rspを一命令文下げておく
       return;
     }
 
@@ -169,7 +175,6 @@ void gen(Node *node) {
       return;
     }
   }
-
 
   // 二項演算系
   gen(node->lhs);
