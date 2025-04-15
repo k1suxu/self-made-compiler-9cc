@@ -23,10 +23,10 @@ void printAssembly(char *fmt, ...) {
   printf("\n");
 }
 
-// スタック位置を示す値をraxに入れてpush
+// メモリスタックの位置を示す値をraxに入れてpush
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR)
-    error("代入演算の左辺が変数ではありません");
+    error("代入演算の左辺またはアドレス演算子の中身が変数ではありません");
   
   // raxにrbp-offsetを代入
   printAssembly("mov rax, rbp");
@@ -147,16 +147,27 @@ void gen(Node *node) {
       printLabel(".Lend%d:", cur_label_num);
       return;
     }
+    case ND_ADDR: {
+      gen_lval(node->lhs);
+      return;
+    }
+    case ND_DEREF: {
+      gen(node->lhs);
+      printAssembly("pop rax");
+      printAssembly("mov rax, [rax]");
+      printAssembly("push rax");
+      return;
+    }
   }
 
 
+  // 二項演算系
   gen(node->lhs);
   gen(node->rhs);
 
   printAssembly("pop rdi");
   printAssembly("pop rax");
 
-  // 二項演算系
   switch (node->kind) {
     case ND_ADD: {
       printAssembly("add rax, rdi");

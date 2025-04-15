@@ -55,6 +55,13 @@ Node *new_node(NodeKind kind) {
   node->kind = kind;
   return node;
 }
+// 単項演算
+Node *new_node_unary(NodeKind kind, Node *lhs) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = kind;
+  node->lhs = lhs;
+  return node;
+}
 // 二項演算
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = new_node(kind);
@@ -271,12 +278,16 @@ Node *mul() {
       return node;
   }
 }
-// unary = ("+" | "-")? primary
+// unary = ("+" | "-")? primary | ("&" | "*") unary
 Node *unary() {
   if (consume("+"))
     return primary();
   if (consume("-"))
     return new_node_binary(ND_SUB, new_node_num(0), primary());
+  if (consume("&"))
+    return new_node_unary(ND_ADDR, unary());
+  if (consume("*"))
+    return new_node_unary(ND_DEREF, unary());
   return primary();
 }
 // primary =  num

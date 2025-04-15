@@ -77,6 +77,8 @@ void *listPop(List *q);
 int listSize(List *q);
 
 typedef enum {
+  ND_ADDR,    // 単項& (アドレス演算子)
+  ND_DEREF,   // 単項* (関接演算子)
   ND_ADD,     // +
   ND_SUB,     // -
   ND_MUL,     // *

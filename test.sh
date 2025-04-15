@@ -234,6 +234,17 @@ main() {
   return hoge(foo(),foo()) + foo();
 }'
 
+# unary operators about address : & and *
+assert 3 'main() {
+x = 3;
+y = &x;
+return *y;}'
+assert 3 'main() {
+x = 3;
+y = 5;
+z = &y + 8;
+return *z;}'
+
 
 
 echo OK
