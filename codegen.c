@@ -16,6 +16,9 @@ void printLabel(char *fmt, ...) {
   printf("\n");
 }
 void printAssembly(char *fmt, ...) {
+  // rspの値はpush, popの他、sub rsp, ***等でも変化する可能性があるが、現状、***の方も16-alignされているので、push, popのみを評価する形にしても問題ない
+  if (startswith(fmt, "push")) rsp += 1;
+  if (startswith(fmt, "pop")) rsp -= 1;
   va_list ap;
   va_start(ap, fmt);
   printf("\t");
@@ -57,8 +60,15 @@ void gen(Node *node) {
         cnt++;
       }
 
-      // TODO: rspが16の倍数になるように調整 (現状はstack_size=0よりずれる可能性がないが、将来的にはずれる可能性がある)
+      // [DONE]: rspが16の倍数になるように調整 (現状はstack_size=0よりずれる可能性がないが、将来的にはずれる可能性がある)
+      if (rsp % 2 == 1) 
+        printAssembly("sub rsp, 8");
+
       printAssembly("call %s", node->funcName);
+      
+      if (rsp % 2 == 1)
+        printAssembly("add rsp, 8");
+
       printAssembly("push rax"); // 関数呼び出しの結果をpop
       return;
     }
@@ -243,6 +253,9 @@ void gen_func(Function *func) {
       ld = ld->next;
     }
   }
+
+  // 関数ごとにrspの値を修正(rbpからのずれで見る)
+  rsp = 0;
 
   {
     ListDatum *ld = func->roots->front;

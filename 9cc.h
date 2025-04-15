@@ -172,3 +172,4 @@ struct Function {
 };
 int cal_stack_size(Function *f);
 extern List *codes; // list of Function*
+extern int rsp;
