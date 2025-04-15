@@ -17,8 +17,18 @@ void error_at(char *loc, char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  int pos = loc - user_input;
-  fprintf(stderr, "%s\n", user_input);
+  char *p = loc;
+  while ((user_input <= p) && (*p != '\n')) p--;
+  p++;
+  char *q = loc;
+  while ((q) && (*q != '\n')) q++;
+
+  for (char *cur = p; cur < q; cur++) {
+    fprintf(stderr, "%c", *cur);
+  }
+  fprintf(stderr, "\n");
+
+  int pos = loc-p;
   fprintf(stderr, "%*s", pos, " "); /* pos個の空白を出力 */
   fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
