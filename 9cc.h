@@ -15,6 +15,7 @@ extern char *user_input;
 // エラー関連
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
+void debug(char *fmt, ...);
 
 // Tokenizer関連
 // トークンの種類
@@ -155,6 +156,13 @@ void gen_lval(Node *node);
 void gen(Node *node);
 void gen_func(Function *func);
 
+typedef struct Type Type;
+struct Type {
+  enum {INT, PTR} ty;
+  Type *ptr_to;
+};
+Type *expect_type();
+
 // ローカル変数の型
 typedef struct LVar LVar;
 struct LVar {
@@ -162,8 +170,11 @@ struct LVar {
   char *name;   // 変数名
   int len;      // 変数名の長さ
   int offset;   // rbpからのオフセット
+
+  Type *type;
 };
 // extern LVar *locals; // ローカル変数辞書を表すグローバル変数
+LVar *find_lvar(Token *tok);
 
 extern int label_count; // labelの末尾につけるXXXXの数字を管理する(今はif, while等すべてに共通して一つの値を使っているが、将来的には各ラベルごとに管理するようにしたい)
 
@@ -174,6 +185,8 @@ struct Function {
   int argc;
   char *funcName;
   int stackSize;
+
+  Type *retType;
 };
 int cal_stack_size(Function *f);
 extern List *codes; // list of Function*

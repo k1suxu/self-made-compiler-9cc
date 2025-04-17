@@ -5,6 +5,8 @@
 
 char *argRegisters[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
+char *NodeKindStr[] = { "ND_ADDR", "ND_DEREF", "ND_ADD", "ND_SUB", "ND_MUL", "ND_DIV", "ND_ASSIGN", "ND_EQ", "ND_NE", "ND_LT", "ND_LE", "ND_NUM", "ND_LVAR", "ND_RETURN", "ND_IF", "ND_ELSE", "ND_WHILE", "ND_FOR", "ND_BLOCK", "ND_FUNC_CALL", "ND_VAR_DEF" };
+
 int use_label() {
   return label_count++;
 }
@@ -29,8 +31,13 @@ void printAssembly(char *fmt, ...) {
 
 // メモリスタックの位置を示す値をraxに入れてpush
 void gen_lval(Node *node) {
+  if (node->kind == ND_DEREF) {
+    gen(node->lhs);
+    return;
+  }
+
   if (node->kind != ND_LVAR)
-    error("代入演算の左辺またはアドレス演算子の中身が変数ではありません");
+    error("代入演算の左辺またはアドレス演算子の中身が変数(deref演算子を含んでも含まなくてもどちらでもよい)ではありません");
   
   // raxにrbp-offsetを代入
   printAssembly("mov rax, rbp");
@@ -80,7 +87,7 @@ void gen(Node *node) {
     }
 
     case ND_VAR_DEF: {
-      printAssembly("sub rsp, 8"); // 最終結果をpopが起こるため、rspを一命令文下げておく
+      printAssembly("push rax"); // 最終結果のpopが起こるため、rspを一つ下げておく
       return;
     }
 

@@ -260,6 +260,62 @@ assert 24 'int main() {
   return intx + _int + _int_ + _;
 }'
 
+# ptr-type test
+assert 3 'int main() {
+int x;
+int *y;
+y = &x;
+*y = 3;
+return x; }'
+# ptr-ptr-type test
+assert 3 'int main() {
+int x;
+int *y;
+int **z;
+x = 8;
+y = &x;
+z = &y;
+**z = 3;
+return x; }'
+assert 3 'int main() {
+int x;
+int *y;
+int **z;
+int ***w;
+x = 8;
+y = &x;
+z = &y;
+w = &z;
+***w = 3;
+return x; }'
+assert 218 'int main() {int i; int j; int k; i = 0;
+int *i_ptr; int **i_ptr_ptr; int *j_ptr; int **j_ptr_ptr;
+i_ptr = &i;
+i_ptr_ptr = &i_ptr;
+j_ptr = &j;
+j_ptr_ptr = &j_ptr;
+for (**j_ptr_ptr = 0; **j_ptr_ptr < 4; **j_ptr_ptr = **j_ptr_ptr + 1) {
+  for (k = 0; k < 5; k = k + 1) {
+    int l;
+    int *l_ptr;
+    l_ptr = &l;
+    for (*l_ptr = 0; l < 6; *l_ptr = l + 1) {
+      int lo; int hi;
+      lo = 0;
+      hi = 100;
+      while (hi - lo > 1) {
+        int mid;
+        mid = (lo + hi) / 2;
+        if (mid * mid > (*i_ptr + j) * k + *l_ptr) hi = mid;
+        else lo = mid;
+      }
+      *i_ptr = **i_ptr_ptr + lo + 1;
+    }
+  }
+}
+return **i_ptr_ptr;
+}'
+
 
 
 echo OK

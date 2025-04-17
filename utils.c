@@ -36,6 +36,12 @@ void error_at(char *loc, char *fmt, ...) {
   exit(1);
 }
 
+void debug(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+}
 
 bool startswith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;

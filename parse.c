@@ -90,6 +90,21 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
+Type *expect_type() {
+  if (!consume_kind(TK_INT)) {
+    error_at(token->str, "関数の返り値または引数および変数の宣言時に、型は省略できません");
+  }
+  Type *retType = calloc(1, sizeof(Type));
+  retType->ty = INT;
+  while (consume("*")) {
+    Type *ptr = calloc(1, sizeof(Type));
+    ptr->ty = PTR;
+    ptr->ptr_to = retType;
+    retType = ptr;
+  }
+  return retType;
+}
+
 // program = func*;
 void program() {
   codes = listNew();
@@ -99,16 +114,14 @@ void program() {
 
 // func = func_name "(" (arg ("," arg)*)? ")" "{" stmt* "}"
 Function *func() {
-  if (!consume_kind(TK_INT)) {
-    error_at(token->str, "返り値の型は省略できません");
-  }
+  Function *cur = calloc(1, sizeof(Function));
+  cur->retType = expect_type();
 
   Token *tok = consume_ident();
   if (!tok) {
     error_at(token->str, "パース時のトップレベルは関数宣言でないといけません");
   }
 
-  Function *cur = calloc(1, sizeof(Function));
   listPush(codes, cur);
   
   expect("(");
@@ -119,9 +132,7 @@ Function *func() {
 
   if (!consume(")")) {
     while (1) {
-      if (!consume_kind(TK_INT)) {
-        error_at(token->str, "引数の型は省略できません");
-      }
+      Type *lvar_type = expect_type();
 
       Token *arg_tok = consume_ident();
       if (!arg_tok) {
@@ -131,10 +142,13 @@ Function *func() {
       if (found) {
         error_at(arg_tok->str, "引数名が重複しています");
       }
+
       found = calloc(1, sizeof(LVar));
       found->name = arg_tok->str;
       found->len = arg_tok->len;
       found->offset = (cur->stackSize + 8); // 8バイト固定
+      found->type = lvar_type;
+
       cur->stackSize += 8;
       (cur->argc)++;
       listPush(cur->locals, found);
@@ -168,7 +182,9 @@ stmt =    expr ";"
         | "for" "(" expr? ";" expr? ";" expr? ")" stmt
  */
 Node *stmt() {
-  if (consume_kind(TK_INT)) {
+  if (token->kind == TK_INT) {
+    Type *lvar_type = expect_type();
+
     Token *tok = consume_ident();
     if (!tok) {
       error_at(token->str, "int の後は変数名が来るべきですが、%.*sが書かれています", tok->len, tok->str);
@@ -184,6 +200,8 @@ Node *stmt() {
     lvar->len = tok->len;
     Function *code_back = codes->back->cur;
     lvar->offset = (code_back->stackSize + 8); // 8バイト固定
+    lvar->type = lvar_type;
+
     code_back->stackSize += 8;
     listPush(code_back->locals, lvar);
 
