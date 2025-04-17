@@ -317,6 +317,7 @@ return **i_ptr_ptr;
 }'
 
 # ptr return function test
+# 規約違反ではない？？(ローカル変数のアドレスを返すのはよくない気もするが、これがコンパイル通るという記録のためにここに残しておく)
 assert 3 'int *foo() {
   int x;
   x = 3;
