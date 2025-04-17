@@ -329,6 +329,17 @@ int main() {
   return *y;
 }'
 
+# ptr arg function test
+assert 3 'int foo(int *x) {
+  *x = 3;
+  return *x;
+}
+int main() {
+  int x;
+  foo(&x);
+  return x;
+}'
+
 
 
 echo OK
