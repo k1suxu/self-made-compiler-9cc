@@ -316,6 +316,18 @@ for (**j_ptr_ptr = 0; **j_ptr_ptr < 4; **j_ptr_ptr = **j_ptr_ptr + 1) {
 return **i_ptr_ptr;
 }'
 
+# ptr return function test
+assert 3 'int *foo() {
+  int x;
+  x = 3;
+  return &x;
+}
+int main() {
+  int *y;
+  y = foo();
+  return *y;
+}'
+
 
 
 echo OK
