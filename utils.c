@@ -48,3 +48,27 @@ bool startswith(char *p, char *q) {
 int round_up(int x, int align) {
   return (x + align - 1) / align * align;
 }
+
+void debug_functions() {
+  debug("*****関数のデバッグ*****");
+  debug("関数の個数: %d", functions->size);
+  for (ListDatum *func = functions->front; func; func = func->next) {
+    debug("関数名: %s", ((Function *)func->cur)->funcName);
+    debug("関数の引数の個数: %d", ((Function *)func->cur)->args->size);
+    debug("関数のローカル変数の個数: %d", ((Function *)func->cur)->locals->size);
+    debug("関数のスタックサイズ: %d", ((Function *)func->cur)->stackSize);
+    debug("プロトタイプかどうか: %d", ((Function *)func->cur)->isPrototype);
+  }
+}
+
+void debug_codes() {
+  debug("*****コードのデバッグ*****");
+  debug("コードの個数: %d", codes->size);
+  for (ListDatum *func = codes->front; func; func = func->next) {
+    debug("関数名: %s", ((Function *)func->cur)->funcName);
+    debug("関数の引数の個数: %d", ((Function *)func->cur)->args->size);
+    debug("関数のローカル変数の個数: %d", ((Function *)func->cur)->locals->size);
+    debug("関数のスタックサイズ: %d", ((Function *)func->cur)->stackSize);
+    debug("プロトタイプかどうか: %d", ((Function *)func->cur)->isPrototype);
+  }
+}

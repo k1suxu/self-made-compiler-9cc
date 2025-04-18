@@ -245,7 +245,7 @@ void gen(Node *node) {
 }
 
 void gen_func(Function *func) {
-  if (func->argc > 6) {
+  if (func->args->size > 6) {
     error("7つ以上の引数をもつ関数の定義はサポートされていません");
   }
   
@@ -257,7 +257,7 @@ void gen_func(Function *func) {
 
   {
     ListDatum *ld = func->locals->front;
-    for (int cnt = 0; cnt < func->argc; cnt++) {
+    for (int cnt = 0; cnt < func->args->size; cnt++) {
       LVar *lvar = ld->cur;
       printAssembly("mov rax, rbp");
       printAssembly("sub rax, %d", lvar->offset);

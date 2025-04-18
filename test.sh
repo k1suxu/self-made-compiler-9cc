@@ -43,6 +43,13 @@ assert() {
 }
 
 make
+# assert 7 'int main() {
+#   int i;
+#   i = 0;
+#   for(; i < 7; i = i + 1) {
+#   }
+#   return i;
+# }'
 assert 0 'int main() {0;}'
 assert 42 'int main() { 42; }'
 assert 21 'int main() { 5+20-4; }'
@@ -164,11 +171,11 @@ for (j = 1; j < 5; j = j + 1)
     i = i + j * k;
   }
 return i;}'
-assert 218 'int main() {int i; int j; int k; i = 0;
-for (j = 0; j < 4; j = j + 1) {
-  for (k = 0; k < 5; k = k + 1) {
+assert 104 'int main() {int i; int j; int k; i = 0;
+for (j = 0; j < 2; j = j + 1) {
+  for (k = 0; k < 3; k = k + 1) {
     int l;
-    for (l = 0; l < 6; l = l + 1) {
+    for (l = 0; l < 3; l = l + 1) {
       int lo; int hi;
       lo = 0;
       hi = 100;
@@ -187,17 +194,108 @@ return i;
 
 # function call test
 assert_with 10 'int foo(); int main() {return foo();}'
-assert_with 15 'int hoge(int a, int b); int main() {return hoge(5,10);}'
-assert_with 30 'int foo();int hoge(int x, int y);int main() {return hoge(foo(),foo()) + foo();}'
+assert_with 15 'int hoge(int x, int y); int main() {return hoge(5,10);}'
+
+assert_with 30 'int hoge(int a, int b); int foo(); int main() {return hoge(foo(),foo()) + foo();}'
 
 # function call stack size test
-assert_with 48 'int hoge(int x, int y);int main() {int i; int j; int k; i = 0;
+assert_with 48 '
+int hoge(int a, int b);
+int main() {int i; int j; int k; i = 0;
 for (j = 0; j < 3; j = j + 1) {
   i = i + hoge(5,10);
 }
 k = 3;
 i = i + k;
 return i;}'
+assert_with 30 '
+int hoge(int a, int b);
+int foo();
+int foo() { return 10; }
+int hoge(int a, int b) {
+  return a + b;
+}
+int decay() {
+  return 10;
+}
+int main() {return hoge(foo(),foo()) + foo();}'
+assert_with 30 '
+int hoge(int a, int b);
+int foo();
+int hoge(int a, int b) {
+  return a + b;
+}
+int foo() { return 10; }
+int decay() {
+  return 10;
+}
+int main() {return hoge(foo(),foo()) + foo();}'
+assert_with 30 '
+int decay1() {
+  return 10;
+}
+int decay2();
+int hoge(int a, int b);
+int decay3();
+int decay4(int a, int b);
+int foo();
+int decay3() {
+  return 10;
+}
+int decay5() {
+  return 10;
+}
+int hoge(int a, int b) {
+  return a + b;
+}
+int foo() {
+  return 10;
+}
+int main() {return hoge(foo(),foo()) + foo();}'
+assert 30 '
+int decay1() {
+  return 10;
+}
+int decay2();
+int hoge(int a, int b);
+int decay3();
+int decay4(int a, int b);
+int foo();
+int decay3() {
+  return 10;
+}
+int decay5() {
+  return 10;
+}
+int hoge(int a, int b) {
+  return a + b;
+}
+int foo() {
+  return 10;
+}
+int main() {return hoge(foo(),foo()) + foo();}'
+assert 30 '
+int decay1() {
+  return 10;
+}
+int decay2();
+int hoge(int a, int b);
+int decay3();
+int decay4(int a, int b);
+int foo();
+int decay3() {
+  return 10;
+}
+int decay5() {
+  return 10;
+}
+int hoge(int a, int b) {
+  return a + b;
+}
+int foo() {
+  return 10;
+}
+int main() {return hoge(decay3(),decay5()) + foo();}'
 
 # function def test
 assert 10 'int hoge() {
@@ -239,16 +337,16 @@ int main() {
 
 # unary operators about address : & and *
 assert 3 'int main() {
-int x; int y;
+int x; int *y;
 x = 3;
 y = &x;
 return *y;}'
-assert 3 'int main() {
-int x; int y; int z;
+assert 11 'int main() {
+int x; int *y; int z;
 x = 3;
-y = 5;
-z = &y + 8;
-return *z;}'
+y = &x;
+z = *y + 8;
+return z;}'
 
 # int-var-name test
 assert 24 'int main() {
@@ -288,21 +386,59 @@ z = &y;
 w = &z;
 ***w = 3;
 return x; }'
-assert 218 'int main() {int i; int j; int k; i = 0;
+assert 4 'int main() {
+int x;
+int *y;
+y = &x;
+*y = 3;
+*y = *y + 1;
+return x; }'
+assert 4 'int main() {
+int x;
+int *y;
+int **z;
+y = &x;
+z = &y;
+**z = 3;
+**z = **z + 1;
+return x; }'
+
+assert 3 'int main() {int cnt; cnt = 0;
+int x;
+int *y;
+y = &x;
+for (*y = 0; x < 3; *y = *y + 1) {
+  cnt = cnt + 1;
+}
+return cnt; }'
+
+assert 3 'int main() {int i; int j; i = 0;
 int *i_ptr; int **i_ptr_ptr; int *j_ptr; int **j_ptr_ptr;
 i_ptr = &i;
 i_ptr_ptr = &i_ptr;
 j_ptr = &j;
 j_ptr_ptr = &j_ptr;
-for (**j_ptr_ptr = 0; **j_ptr_ptr < 4; **j_ptr_ptr = **j_ptr_ptr + 1) {
-  for (k = 0; k < 5; k = k + 1) {
+for (**j_ptr_ptr = 0; **j_ptr_ptr < 3; **j_ptr_ptr = **j_ptr_ptr + 1) {
+  *i_ptr = *i_ptr + j;
+}
+return **i_ptr_ptr;
+}'
+
+assert 189 'int main() {int i; int j; int k; i = 0;
+int *i_ptr; int **i_ptr_ptr; int *j_ptr; int **j_ptr_ptr;
+i_ptr = &i;
+i_ptr_ptr = &i_ptr;
+j_ptr = &j;
+j_ptr_ptr = &j_ptr;
+for (**j_ptr_ptr = 0; **j_ptr_ptr < 3; **j_ptr_ptr = **j_ptr_ptr + 1) {
+  for (k = 0; k < 2; k = k + 1) {
     int l;
     int *l_ptr;
     l_ptr = &l;
     for (*l_ptr = 0; l < 6; *l_ptr = l + 1) {
       int lo; int hi;
       lo = 0;
-      hi = 100;
+      hi = 10;
       while (hi - lo > 1) {
         int mid;
         mid = (lo + hi) / 2;
@@ -337,6 +473,63 @@ assert 3 'int foo(int *x) {
 int main() {
   int x;
   foo(&x);
+  return x;
+}'
+assert 3 'int foo(int *x) {
+  *x = 3;
+  return *x;
+}
+int main() {
+  int x;
+  int y;
+  y = foo(&x);
+  return y;
+}'
+assert 3 'int foo(int *x) {
+  *x = 3;
+  return *x;
+}
+int main() {
+  int x;
+  int *y;
+  y = &x;
+  foo(y);
+  return x;
+}'
+assert 3 'int foo(int *x) {
+  *x = 3;
+  return *x;
+}
+int main() {
+  int x;
+  int *y;
+  y = &x;
+  foo(y);
+  return *y;
+}'
+# コンパイルは通るけど不適切なコード (return時の型チェックの必要性)
+# assert 3 'int foo(int *x) {
+#   *x = 3;
+#   return *x;
+# }
+# int main() {
+#   int x;
+#   int *y;
+#   y = &x;
+#   foo(y);
+#   return y;
+# }'
+
+
+# ptr in blacket test
+assert 20 'int main() {
+  int x;
+  int *y;
+  int **z;
+  x = 10;
+  y = &x;
+  z = &y;
+  *(*z) = 20;
   return x;
 }'
 

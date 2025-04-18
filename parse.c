@@ -60,6 +60,23 @@ Node *new_node_unary(NodeKind kind, Node *lhs) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
   node->lhs = lhs;
+
+  if (kind == ND_DEREF) {
+    if (lhs->type && lhs->type->ty == PTR) {
+      node->type = lhs->type->ptr_to;
+    } else {
+      error_at(token->str, "ポインタ型ではありません");
+    }
+  } else if (kind == ND_ADDR) {
+    if (lhs->type) {
+      node->type = calloc(1, sizeof(Type));
+      node->type->ty = PTR;
+      node->type->ptr_to = lhs->type;
+    } else {
+      error_at(token->str, "アドレス演算子の中身の型が不明です");
+    }
+  }
+
   return node;
 }
 // 二項演算
@@ -67,12 +84,40 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = new_node(kind);
   node->lhs = lhs;
   node->rhs = rhs;
+
+  if (kind == ND_ASSIGN) {
+    if (lhs->type && rhs->type) {
+      // debug("lhs->type->ty: %d, rhs->type->ty: %d\n", lhs->type->ty, rhs->type->ty);
+      if (lhs->type->ty == rhs->type->ty) {
+        node->type = lhs->type;
+      } else {
+        error_at(token->str, "型が一致しません");
+      }
+    } else {
+      error_at(token->str, "型が不明です");
+    }
+    return node;
+  }
+
+  if (lhs->type && rhs->type) {
+    if (lhs->type->ty == INT && rhs->type->ty == INT) {
+      node->type = calloc(1, sizeof(Type));
+      node->type->ty = INT;
+    } else {
+      error_at(token->str, "PTR型の演算はまだ実装されていません");
+    }
+  } else {
+    error_at(token->str, "型が不明です");
+  }
+
   return node;
 }
 // 数値
 Node *new_node_num(int val) {
   Node *node = new_node(ND_NUM);
   node->val = val;
+  node->type = calloc(1, sizeof(Type));
+  node->type->ty = INT;
   return node;
 }
 
@@ -135,10 +180,7 @@ void func() {
   if (!tok) {
     error_at(token->str, "パース時のトップレベルは関数宣言でないといけません");
   }
-  // if (find_function(tok)) {
-  //   // プロトタイプ宣言がある都合上、一旦コメントアウト
-  //   error_at(tok->str, "関数名が重複しています");
-  // }
+  Function *existing_func = find_function(tok);
 
   listPush(codes, cur);
   
@@ -170,7 +212,6 @@ void func() {
       found->type = lvar_type;
 
       cur->stackSize += 8;
-      (cur->argc)++;
       listPush(cur->args, found);
       listPush(cur->locals, found);
 
@@ -182,11 +223,48 @@ void func() {
 
   // 返り値の型および引数の型や個数を保存
   // debug("関数名: %.*s, 関数名の長さ: %d, 引数の個数: %d\n", cur->funcNameLen, cur->funcName, cur->funcNameLen, cur->argc);
-  listPush(functions, cur);
 
-  if (consume(";")) {
-    listPop(codes);
-    return;
+  if (existing_func) {
+    if (consume(";")) {
+      error_at(tok->str, "不必要なプロトタイプ宣言です(すでに関数が定義されている or プロトタイプ宣言がすでにある): %.*s", tok->len, tok->str);
+    } else if (existing_func->isPrototype) {
+      if (existing_func->args->size != cur->args->size) {
+        error_at(tok->str, "The number of arguments is not compatible: %.*s", tok->len, tok->str);
+      }
+      if (existing_func->retType->ty != cur->retType->ty) {
+        error_at(tok->str, "The return type is not compatible: %.*s", tok->len, tok->str);
+      }
+      ListDatum *existing_args = existing_func->args->front;
+      ListDatum *cur_args = cur->args->front;
+
+      for (int i = 0; i < cur->args->size; i++) {
+        LVar *existing_arg = existing_args->cur;
+        LVar *cur_arg = cur_args->cur;
+        if (existing_arg->type->ty != cur_arg->type->ty) {
+          error_at(tok->str, "The type of argument is not compatible: %.*s", tok->len, tok->str);
+        }
+        existing_args = existing_args->next;
+        cur_args = cur_args->next;
+      }
+
+      // existing_funcを消す
+      list_erase(functions, existing_func);
+
+      cur->isPrototype = false;
+      listPush(functions, cur);
+    } else {
+      error_at(tok->str, "redeclaration (implementation) of %.*s", tok->len, tok->str);
+    }
+  } else {
+    if (consume(";")) {
+      cur->isPrototype = true;
+      listPush(functions, cur);
+      list_erase(codes, cur);
+      return;
+    } else {
+      cur->isPrototype = false;
+      listPush(functions, cur);
+    }
   }
 
   // stmtでやると{}に囲まれない一行処理とかがコンパイルを通ってしまう気がしている
@@ -234,6 +312,7 @@ Node *stmt() {
     listPush(code_back->locals, lvar);
 
     Node *node = new_node(ND_VAR_DEF);
+    node->type = lvar->type;
     node->offset = lvar->offset;
     node->varName = calloc(lvar->len, sizeof(char));
     strncpy(node->varName, tok->str, tok->len);
@@ -397,12 +476,10 @@ Node *primary() {
       node->funcName = calloc(tok->len, sizeof(char));
       strncpy(node->funcName, tok->str, tok->len);
       node->args = listNew();
-      node->argc = 0;
       
       if (!consume(")")) {
         while (1) {
           listPush(node->args, assign());
-          node->argc++;
           if (consume(")"))
             break;
           expect(",");
@@ -415,10 +492,26 @@ Node *primary() {
         error_at(tok->str, "Undefined Error (function): %.*s", tok->len, tok->str);
       }
 
-      if (func->argc != node->argc) {
-        error_at(tok->str, "Argument Number is not Compatible: %.*s", tok->len, tok->str);
+      if (func->args->size != node->args->size) {
+        error_at(tok->str, "The number of arguments is not compatible: %.*s", tok->len, tok->str);
       }
 
+      // ListDatum *existing_args = func->args->front;
+      // ListDatum *cur_args = node->args->front;
+      // for (int i = 0; i < node->args->size; i++) {
+      //   LVar *existing_arg = existing_args->cur;
+      //   Node *cur_arg = cur_args->cur;
+      //   if (!(cur_arg->type)) {
+      //     error("型が不明です");
+      //   }
+      //   if (existing_arg->type->ty != cur_arg->type->ty) {
+      //     error_at(tok->str, "The type of argument is not compatible: %.*s", tok->len, tok->str);
+      //   }
+      //   existing_args = existing_args->next;
+      //   cur_args = cur_args->next;
+      // }
+
+      node->type = func->retType;
       return node;
     }
 
@@ -427,6 +520,7 @@ Node *primary() {
     LVar *lvar = find_lvar(tok);
     if (lvar) {
       node->offset = lvar->offset;
+      node->type = lvar->type;
     } else {
       error_at(tok->str, "Undefined Error (variable): %.*s", tok->len, tok->str);
     }

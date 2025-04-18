@@ -75,8 +75,8 @@ List *listNew();
 bool listIsEmpty(List *q);
 void listPush(List *q, void *cur);
 void *listTop(List *q);
-void *listPop(List *q);
 int listSize(List *q);
+void list_erase(List *from, void *item);
 
 typedef enum {
   ND_ADDR,    // 単項& (アドレス演算子)
@@ -102,6 +102,13 @@ typedef enum {
   ND_VAR_DEF,
 } NodeKind;
 
+typedef struct Type Type;
+struct Type {
+  enum {INT, PTR} ty;
+  Type *ptr_to;
+};
+Type *expect_type();
+
 typedef struct Node Node;
 struct Node {
   NodeKind kind;
@@ -125,11 +132,13 @@ struct Node {
 
   // for func call
   char *funcName;
-  int argc;
   List *args; // list of Node*
 
   // var def
   char *varName;
+
+  // 演算結果のtype
+  Type *type;
 };
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
@@ -157,13 +166,6 @@ void gen_lval(Node *node);
 void gen(Node *node);
 void gen_func(Function *func);
 
-typedef struct Type Type;
-struct Type {
-  enum {INT, PTR} ty;
-  Type *ptr_to;
-};
-Type *expect_type();
-
 // ローカル変数の型
 typedef struct LVar LVar;
 struct LVar {
@@ -183,15 +185,22 @@ struct Function {
   List *roots;     // 抽象構文木のroot node  // list of Node*
   List *locals;   // ローカル変数それぞれのオフセットなど // list of LVar*
   // List *args;  // 引数それぞれのオフセットなど(LVarと同様にする予定)
-  int argc;
   List *args; // list of LVar*
   char *funcName;
   int funcNameLen;
   int stackSize;
 
   Type *retType;
+  bool isPrototype; // prototypeかどうか
 };
 int cal_stack_size(Function *f);
 extern List *codes; // list of Function*
 extern int rsp;
 extern List *functions;
+
+
+// debug
+// functionsの中身をデバッグ出力
+void debug_functions();
+void debug_codes();
+

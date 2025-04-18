@@ -36,18 +36,30 @@ void *listTop(List *q) {
   return q->front->cur;
 }
 
-void *listPop(List *q) {
-  if (listIsEmpty(q)) {
-    error("List is Empty (pop) !!\n");
-  }
-
-  q->front = q->front->next;
-  --(q->size);
-  if (q->front == NULL) {
-    q->back = NULL;
-  }
-}
-
 int listSize(List *q) {
   return q->size;
+}
+
+void list_erase(List *from, void *item) {
+  for (ListDatum *cur = from->front; cur != NULL; cur = cur->next) {
+    if (cur->cur == item) {
+      if (cur == from->front) {
+        from->front = cur->next;
+        if (from->front == NULL) {
+          from->back = NULL;
+        }
+      } else {
+        ListDatum *prev = from->front;
+        while (prev->next != cur) {
+          prev = prev->next;
+        }
+        prev->next = cur->next;
+        if (prev->next == NULL) {
+          from->back = prev;
+        }
+      }
+      --(from->size);
+      return;
+    }
+  }
 }

@@ -19,10 +19,13 @@ int main(int argc, char **argv) {
   }
 
   // トークナイズしてパース (結果はグローバル変数：codeに保存)
+  
   user_input = argv[1];
   user_input = strcat(argv[1], "\n");
   token = tokenize(user_input);
   program();
+
+  // debug_codes();
 
   // アセンブリの前半部分を出力
   printLabel(".intel_syntax noprefix");
@@ -32,5 +35,8 @@ int main(int argc, char **argv) {
   for (ListDatum *code = codes->front; code; code = code->next) {
     gen_func(code->cur);
   }
+
+  // debug_functions();
+
   return 0;
 }
