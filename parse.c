@@ -496,20 +496,20 @@ Node *primary() {
         error_at(tok->str, "The number of arguments is not compatible: %.*s", tok->len, tok->str);
       }
 
-      // ListDatum *existing_args = func->args->front;
-      // ListDatum *cur_args = node->args->front;
-      // for (int i = 0; i < node->args->size; i++) {
-      //   LVar *existing_arg = existing_args->cur;
-      //   Node *cur_arg = cur_args->cur;
-      //   if (!(cur_arg->type)) {
-      //     error("型が不明です");
-      //   }
-      //   if (existing_arg->type->ty != cur_arg->type->ty) {
-      //     error_at(tok->str, "The type of argument is not compatible: %.*s", tok->len, tok->str);
-      //   }
-      //   existing_args = existing_args->next;
-      //   cur_args = cur_args->next;
-      // }
+      ListDatum *existing_args = func->args->front;
+      ListDatum *cur_args = node->args->front;
+      for (int i = 0; i < node->args->size; i++) {
+        LVar *existing_arg = existing_args->cur;
+        Node *cur_arg = cur_args->cur;
+        if (!(cur_arg->type)) {
+          error("型が不明です");
+        }
+        if (existing_arg->type->ty != cur_arg->type->ty) {
+          error_at(tok->str, "The type of argument is not compatible: %.*s", tok->len, tok->str);
+        }
+        existing_args = existing_args->next;
+        cur_args = cur_args->next;
+      }
 
       node->type = func->retType;
       return node;
