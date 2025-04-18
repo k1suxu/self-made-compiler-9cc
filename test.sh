@@ -218,7 +218,7 @@ int hoge(int a, int b) {
 int decay() {
   return 10;
 }
-int main() {return hoge(foo(),foo()) + foo();}'
+int main() {return hoge(foo(), foo()) + foo();}'
 assert_with 30 '
 int hoge(int a, int b);
 int foo();

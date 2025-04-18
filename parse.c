@@ -49,6 +49,20 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
+Type *new_type_int() {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = INT;
+  type->size = 4;
+  return type;
+}
+Type *new_type_ptr(Type *ptr_to) {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = PTR;
+  type->ptr_to = ptr_to;
+  type->size = 8;
+  return type;
+}
+
 // なんでも
 Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
@@ -69,9 +83,7 @@ Node *new_node_unary(NodeKind kind, Node *lhs) {
     }
   } else if (kind == ND_ADDR) {
     if (lhs->type) {
-      node->type = calloc(1, sizeof(Type));
-      node->type->ty = PTR;
-      node->type->ptr_to = lhs->type;
+      node->type = new_type_ptr(lhs->type);
     } else {
       error_at(token->str, "アドレス演算子の中身の型が不明です");
     }
@@ -101,8 +113,7 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
 
   if (lhs->type && rhs->type) {
     if (lhs->type->ty == INT && rhs->type->ty == INT) {
-      node->type = calloc(1, sizeof(Type));
-      node->type->ty = INT;
+      node->type = new_type_int();
     } else {
       error_at(token->str, "PTR型の演算はまだ実装されていません");
     }
@@ -116,8 +127,7 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
 Node *new_node_num(int val) {
   Node *node = new_node(ND_NUM);
   node->val = val;
-  node->type = calloc(1, sizeof(Type));
-  node->type->ty = INT;
+  node->type = new_type_int();
   return node;
 }
 
@@ -141,10 +151,12 @@ Type *expect_type() {
   }
   Type *retType = calloc(1, sizeof(Type));
   retType->ty = INT;
+  retType->size = 4;
   while (consume("*")) {
     Type *ptr = calloc(1, sizeof(Type));
     ptr->ty = PTR;
     ptr->ptr_to = retType;
+    ptr->size = 8;
     retType = ptr;
   }
   return retType;
@@ -208,10 +220,10 @@ void func() {
       found = calloc(1, sizeof(LVar));
       found->name = arg_tok->str;
       found->len = arg_tok->len;
-      found->offset = (cur->stackSize + 8); // 8バイト固定
+      found->offset = (cur->stackSize + lvar_type->size); // 8バイト固定
       found->type = lvar_type;
 
-      cur->stackSize += 8;
+      cur->stackSize += lvar_type->size;
       listPush(cur->args, found);
       listPush(cur->locals, found);
 
@@ -305,10 +317,10 @@ Node *stmt() {
     lvar->name = tok->str;
     lvar->len = tok->len;
     Function *code_back = codes->back->cur;
-    lvar->offset = (code_back->stackSize + 8); // 8バイト固定
+    lvar->offset = (code_back->stackSize + lvar_type->size); // 8バイト固定
     lvar->type = lvar_type;
 
-    code_back->stackSize += 8;
+    code_back->stackSize += lvar_type->size;
     listPush(code_back->locals, lvar);
 
     Node *node = new_node(ND_VAR_DEF);

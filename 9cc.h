@@ -106,6 +106,7 @@ typedef struct Type Type;
 struct Type {
   enum {INT, PTR} ty;
   Type *ptr_to;
+  int size;
 };
 Type *expect_type();
 
@@ -143,6 +144,8 @@ struct Node {
 Node *new_node(NodeKind kind);
 Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+Type *new_type_int();
+Type *new_type_ptr(Type *ptr_to);
 
 typedef struct Function Function;
 

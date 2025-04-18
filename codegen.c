@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include "9cc.h"
 
-char *argRegisters[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+static char *argRegi8[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
+static char *argRegi32[] = {"edi", "esi", "edx", "ecx", "r8d", "r9d"};
+static char *argRegi64[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 
 char *NodeKindStr[] = { "ND_ADDR", "ND_DEREF", "ND_ADD", "ND_SUB", "ND_MUL", "ND_DIV", "ND_ASSIGN", "ND_EQ", "ND_NE", "ND_LT", "ND_LE", "ND_NUM", "ND_LVAR", "ND_RETURN", "ND_IF", "ND_ELSE", "ND_WHILE", "ND_FOR", "ND_BLOCK", "ND_FUNC_CALL", "ND_VAR_DEF" };
 
@@ -27,6 +30,16 @@ void printAssembly(char *fmt, ...) {
   printf("\t");
   vprintf(fmt, ap);
   printf("\n");
+}
+
+static char *getArgRegi(int cnt, int size) {
+  if (cnt < 0 || cnt > 5) {
+    error("引数の数が不正です");
+  }
+  if (size == 1) return argRegi8[cnt];
+  if (size == 4) return argRegi32[cnt];
+  if (size == 8) return argRegi64[cnt];
+  error("引数のサイズが不正です: %d", size);
 }
 
 // メモリスタックの位置を示す値をraxに入れてpush
@@ -62,9 +75,22 @@ void gen(Node *node) {
           error("7つ以上の引数は指定できません");
         }
 
-        gen(arg->cur);
+        Node *cur = arg->cur;
+        gen(cur);
         printAssembly("pop rax"); // 演算結果を取ってくる
-        printAssembly("mov %s, rax", argRegisters[cnt]); // 引数をレジスタに入力
+        switch (cur->type->size) {
+          case 1:
+            printAssembly("mov %s, al", getArgRegi(cnt, 1)); // 引数をレジスタに入力
+            break;
+          case 4:
+            printAssembly("mov %s, eax", getArgRegi(cnt, 4)); // 引数をレジスタに入力
+            break;
+          case 8:
+            printAssembly("mov %s, rax", getArgRegi(cnt, 8)); // 引数をレジスタに入力
+            break;
+          default:
+            error("引数のサイズが不正です: in-function-call: %d", cur->type->size);
+        }
         cnt++;
       }
 
@@ -94,7 +120,19 @@ void gen(Node *node) {
     case ND_LVAR: {
       gen_lval(node);
       printAssembly("pop rax");
-      printAssembly("mov rax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+      switch (node->type->size) {
+        case 1:
+          printAssembly("movzx rax, byte [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+          break;
+        case 4:
+          printAssembly("mov eax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+          break;
+        case 8:
+          printAssembly("mov rax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+          break;
+        default:
+          error("変数のサイズが不正です %d", node->type->size);
+      }
       printAssembly("push rax");
       return;
     }
@@ -105,7 +143,19 @@ void gen(Node *node) {
 
       printAssembly("pop rdi"); // 右辺値をrdiへ取り出す
       printAssembly("pop rax"); // 左辺値(変数のメモリアドレス)を取り出す
-      printAssembly("mov [rax], rdi");
+      switch (node->lhs->type->size) {
+        case 1:
+          printAssembly("mov [rax], dil");
+          break;
+        case 4:
+          printAssembly("mov [rax], edi");
+          break;
+        case 8:
+          printAssembly("mov [rax], rdi");
+          break;
+        default:
+          error("変数のサイズが不正です: %d", node->lhs->type->size);
+      }
       printAssembly("push rdi");
       return;
     }
@@ -177,7 +227,19 @@ void gen(Node *node) {
     case ND_DEREF: {
       gen(node->lhs);
       printAssembly("pop rax");
-      printAssembly("mov rax, [rax]");
+      switch (node->type->size) {
+        case 1:
+          printAssembly("movzx rax, byte [rax]");
+          break;
+        case 4:
+          printAssembly("mov eax, [rax]");
+          break;
+        case 8:
+          printAssembly("mov rax, [rax]");
+          break;
+        default:
+          error("ポインタのサイズが不正です: %d", node->type->size);
+      }
       printAssembly("push rax");
       return;
     }
@@ -261,7 +323,19 @@ void gen_func(Function *func) {
       LVar *lvar = ld->cur;
       printAssembly("mov rax, rbp");
       printAssembly("sub rax, %d", lvar->offset);
-      printAssembly("mov [rax], %s", argRegisters[cnt]);
+      switch (lvar->type->size) {
+        case 1:
+          printAssembly("mov [rax], %s", getArgRegi(cnt, 1));
+          break;
+        case 4:
+          printAssembly("mov [rax], %s", getArgRegi(cnt, 4));
+          break;
+        case 8:
+          printAssembly("mov [rax], %s", getArgRegi(cnt, 8));
+          break;
+        default:
+          error("引数のサイズが不正です: in-function-def: %d", lvar->type->size);
+      }
       ld = ld->next;
     }
   }
