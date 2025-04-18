@@ -1,11 +1,21 @@
 #!/bin/bash
-echo "#include<stdio.h>
+echo "
+#include<stdio.h>
+#include<stdlib.h>
 int foo() {
   return 10;
 }
 int hoge(int a, int b) {
   return a + b;
-}" > tmpDecl.c
+}
+int alloc4(int **p, int a, int b, int c, int d) {
+  *p = malloc(sizeof(int) * 4);
+  (*p)[0] = a;
+  (*p)[1] = b;
+  (*p)[2] = c;
+  (*p)[3] = d;
+}
+" > tmpDecl.c
 cc -c tmpDecl.c -o tmpDecl.o
 
 assert_with() {
@@ -532,6 +542,59 @@ assert 20 'int main() {
   *(*z) = 20;
   return x;
 }'
+
+# ptr add test
+assert_with 4 '
+int alloc4(int **p, int a, int b, int c, int d);
+int main() {
+int *p;
+alloc4(&p, 1, 2, 4, 8);
+int *q;
+q = p + 2;
+return *q;
+}'
+# ptr sub test
+assert_with 1 '
+int alloc4(int **p, int a, int b, int c, int d);
+int main() {
+int *p;
+alloc4(&p, 1, 2, 4, 8);
+int *q;
+q = p + 2;
+return *(q - 2);
+}'
+assert_with 8 '
+int alloc4(int **p, int a, int b, int c, int d);
+int main() {
+int *p;
+alloc4(&p, 1, 2, 4, 8);
+int *q;
+q = p + 2;
+q = (2 + (q - 2) + 1);
+return *q;
+}'
+assert_with 8 '
+int alloc4(int **p, int a, int b, int c, int d);
+int main() {
+int *p;
+alloc4(&p, 1, 2, 4, 8);
+int *q;
+q = p + 2;
+q = (2 + q - 2 + 1);
+return *q;
+}'
+assert_with 4 '
+int alloc4(int **p, int a, int b, int c, int d);
+int main() {
+int *p;
+alloc4(&p, 1, 2, 4, 8);
+int *q;
+q = p + 2;
+q = (3 - 2 + q - 2 + 1);
+return *q;
+}'
+
+
 
 
 

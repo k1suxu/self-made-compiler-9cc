@@ -114,11 +114,24 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
   if (lhs->type && rhs->type) {
     if (lhs->type->ty == INT && rhs->type->ty == INT) {
       node->type = new_type_int();
-    } else {
-      error_at(token->str, "PTR型の演算はまだ実装されていません");
+    } else if (lhs->type->ty == PTR && rhs->type->ty == INT) {
+      node->type = lhs->type;
+      node->kind = (kind == ND_ADD) ? ND_PTR_ADD : ND_PTR_SUB;
+    } else if (lhs->type->ty == INT && rhs->type->ty == PTR) {
+      if (kind == ND_SUB) {
+        error_at(token->str, "INT - PTR の演算はできません");
+      }
+      // lhs, rhsを入れ替える
+      node->lhs = rhs;
+      node->rhs = lhs;
+      node->type = rhs->type;
+      
+      node->kind = ND_PTR_ADD;
+    } else if (lhs->type->ty == PTR && rhs->type->ty == PTR) {
+      error_at(token->str, "PTR + PTR の演算はできません");
     }
   } else {
-    error_at(token->str, "型が不明です");
+    error_at(token->str, "二項演算のどちらかの辺の型が不明です");
   }
 
   return node;

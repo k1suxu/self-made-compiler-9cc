@@ -8,7 +8,7 @@ static char *argRegi32[] = {"edi", "esi", "edx", "ecx", "r8d", "r9d"};
 static char *argRegi64[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 
-char *NodeKindStr[] = { "ND_ADDR", "ND_DEREF", "ND_ADD", "ND_SUB", "ND_MUL", "ND_DIV", "ND_ASSIGN", "ND_EQ", "ND_NE", "ND_LT", "ND_LE", "ND_NUM", "ND_LVAR", "ND_RETURN", "ND_IF", "ND_ELSE", "ND_WHILE", "ND_FOR", "ND_BLOCK", "ND_FUNC_CALL", "ND_VAR_DEF" };
+char *NodeKindStr[] = { "ND_ADDR", "ND_DEREF", "ND_ADD", "ND_SUB", "ND_MUL", "ND_DIV", "ND_ASSIGN", "ND_EQ", "ND_NE", "ND_LT", "ND_LE", "ND_NUM", "ND_LVAR", "ND_RETURN", "ND_IF", "ND_ELSE", "ND_WHILE", "ND_FOR", "ND_BLOCK", "ND_FUNC_CALL", "ND_VAR_DEF", "ND_PTR_ADD", "ND_PTR_SUB" };
 
 int use_label() {
   return label_count++;
@@ -59,6 +59,8 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+  // debug("gen: %s", NodeKindStr[node->kind]);
+
   switch (node->kind) {
     case ND_BLOCK: {
       for (ListDatum *q = node->multiStmt->front; q; q = q->next) {
@@ -253,6 +255,17 @@ void gen(Node *node) {
   printAssembly("pop rax");
 
   switch (node->kind) {
+    case ND_PTR_ADD: {
+      printAssembly("imul rdi, %d", node->lhs->type->ptr_to->size); // ポインタのサイズを考慮してrdiをスケールする
+      printAssembly("add rax, rdi");
+      break;
+    }
+    case ND_PTR_SUB: {
+      printAssembly("imul rdi, %d", node->lhs->type->ptr_to->size); // ポインタのサイズを考慮してrdiをスケールする
+      printAssembly("sub rax, rdi");
+      break;
+    }
+
     case ND_ADD: {
       printAssembly("add rax, rdi");
       break;

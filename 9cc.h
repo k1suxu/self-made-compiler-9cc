@@ -100,6 +100,8 @@ typedef enum {
   ND_BLOCK,
   ND_FUNC_CALL,
   ND_VAR_DEF,
+  ND_PTR_ADD,
+  ND_PTR_SUB,
 } NodeKind;
 
 typedef struct Type Type;
