@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "9cc.h"
 
 // グローバル変数の初期化(定義)
@@ -9,6 +10,7 @@ int label_count = 1;
 int rsp = 0;
 
 List *codes;
+List *functions;
 
 int main(int argc, char **argv) {
   if (argc != 2) {
@@ -18,6 +20,7 @@ int main(int argc, char **argv) {
 
   // トークナイズしてパース (結果はグローバル変数：codeに保存)
   user_input = argv[1];
+  user_input = strcat(argv[1], "\n");
   token = tokenize(user_input);
   program();
 

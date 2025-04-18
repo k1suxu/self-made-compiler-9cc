@@ -20,10 +20,8 @@ void error_at(char *loc, char *fmt, ...) {
   char *p = loc;
   while ((user_input <= p) && (*p != '\n')) p--;
   p++;
-  char *q = loc;
-  while ((q) && (*q != '\n')) q++;
 
-  for (char *cur = p; cur < q; cur++) {
+  for (char *cur = p; cur && (*cur != '\n'); cur++) {
     fprintf(stderr, "%c", *cur);
   }
   fprintf(stderr, "\n");

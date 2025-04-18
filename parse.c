@@ -105,15 +105,29 @@ Type *expect_type() {
   return retType;
 }
 
+Function *find_function(Token *tok) {
+  if (tok->kind != TK_IDENT) {
+    error_at(tok->str, "`find_function` 関数が呼ばれましたが、引数が TK_IDENT ではありません");
+  }
+  for (ListDatum *ld = functions->front; ld; ld = ld->next) {
+    Function *func = ld->cur;
+    if (func->funcNameLen == tok->len && !memcmp(tok->str, func->funcName, tok->len)) {
+      return func;
+    }
+  }
+  return NULL;
+}
+
 // program = func*;
 void program() {
   codes = listNew();
+  functions = listNew();
   while (!at_eof())
     func();
 }
 
 // func = func_name "(" (arg ("," arg)*)? ")" "{" stmt* "}"
-Function *func() {
+void func() {
   Function *cur = calloc(1, sizeof(Function));
   cur->retType = expect_type();
 
@@ -121,13 +135,19 @@ Function *func() {
   if (!tok) {
     error_at(token->str, "パース時のトップレベルは関数宣言でないといけません");
   }
+  // if (find_function(tok)) {
+  //   // プロトタイプ宣言がある都合上、一旦コメントアウト
+  //   error_at(tok->str, "関数名が重複しています");
+  // }
 
   listPush(codes, cur);
   
   expect("(");
   cur->funcName = calloc(tok->len, sizeof(char));
   strncpy(cur->funcName, tok->str, tok->len);
+  cur->funcNameLen = tok->len;
   cur->locals = listNew();
+  cur->args = listNew();
   cur->stackSize = 0;
 
   if (!consume(")")) {
@@ -151,12 +171,22 @@ Function *func() {
 
       cur->stackSize += 8;
       (cur->argc)++;
+      listPush(cur->args, found);
       listPush(cur->locals, found);
 
       if (consume(")"))
         break;
       expect(",");
     }
+  }
+
+  // 返り値の型および引数の型や個数を保存
+  // debug("関数名: %.*s, 関数名の長さ: %d, 引数の個数: %d\n", cur->funcNameLen, cur->funcName, cur->funcNameLen, cur->argc);
+  listPush(functions, cur);
+
+  if (consume(";")) {
+    listPop(codes);
+    return;
   }
 
   // stmtでやると{}に囲まれない一行処理とかがコンパイルを通ってしまう気がしている
@@ -168,8 +198,6 @@ Function *func() {
   }
 
   cur->stackSize = round_up(cur->stackSize, 16);
-
-  return cur;
 }
 
 /*
@@ -369,14 +397,26 @@ Node *primary() {
       node->funcName = calloc(tok->len, sizeof(char));
       strncpy(node->funcName, tok->str, tok->len);
       node->args = listNew();
+      node->argc = 0;
       
       if (!consume(")")) {
         while (1) {
           listPush(node->args, assign());
+          node->argc++;
           if (consume(")"))
             break;
           expect(",");
         }
+      }
+
+      Function *func = find_function(tok);
+      
+      if (!func) {
+        error_at(tok->str, "Undefined Error (function): %.*s", tok->len, tok->str);
+      }
+
+      if (func->argc != node->argc) {
+        error_at(tok->str, "Argument Number is not Compatible: %.*s", tok->len, tok->str);
       }
 
       return node;
@@ -388,7 +428,7 @@ Node *primary() {
     if (lvar) {
       node->offset = lvar->offset;
     } else {
-      error_at(tok->str, "Undefined Error: %.*s", tok->len, tok->str);
+      error_at(tok->str, "Undefined Error (variable): %.*s", tok->len, tok->str);
     }
 
     return node;

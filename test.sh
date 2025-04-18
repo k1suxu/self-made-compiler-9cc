@@ -186,12 +186,12 @@ return i;
 }'
 
 # function call test
-assert_with 10 'int main() {return foo();}'
-assert_with 15 'int main() {return hoge(5,10);}'
-assert_with 30 'int main() {return hoge(foo(),foo()) + foo();}'
+assert_with 10 'int foo(); int main() {return foo();}'
+assert_with 15 'int hoge(int a, int b); int main() {return hoge(5,10);}'
+assert_with 30 'int foo();int hoge(int x, int y);int main() {return hoge(foo(),foo()) + foo();}'
 
 # function call stack size test
-assert_with 48 'int main() {int i; int j; int k; i = 0;
+assert_with 48 'int hoge(int x, int y);int main() {int i; int j; int k; i = 0;
 for (j = 0; j < 3; j = j + 1) {
   i = i + hoge(5,10);
 }

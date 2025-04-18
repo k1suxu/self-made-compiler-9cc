@@ -125,7 +125,8 @@ struct Node {
 
   // for func call
   char *funcName;
-  List *args;
+  int argc;
+  List *args; // list of Node*
 
   // var def
   char *varName;
@@ -137,7 +138,7 @@ Node *new_node_num(int val);
 typedef struct Function Function;
 
 void program();
-Function *func();
+void func();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -183,7 +184,9 @@ struct Function {
   List *locals;   // ローカル変数それぞれのオフセットなど // list of LVar*
   // List *args;  // 引数それぞれのオフセットなど(LVarと同様にする予定)
   int argc;
+  List *args; // list of LVar*
   char *funcName;
+  int funcNameLen;
   int stackSize;
 
   Type *retType;
@@ -191,3 +194,4 @@ struct Function {
 int cal_stack_size(Function *f);
 extern List *codes; // list of Function*
 extern int rsp;
+extern List *functions;
