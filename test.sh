@@ -594,6 +594,49 @@ q = (3 - 2 + q - 2 + 1);
 return *q;
 }'
 
+# sizeof test
+assert 4 'int main() {return sizeof(1);}'
+assesrt 4 'int main() {
+int x;
+int *y;
+return sizeof x;
+}'
+assert 8 'int main() {
+int x;
+int *y;
+return sizeof y;
+}'
+assert 4 'int main() {
+int x;
+int *y;
+return sizeof *y;
+}'
+assert 8 'int main() {
+int ***x;
+return sizeof **x;
+}'
+assert 4 'int main() {
+int ***x;
+return sizeof ***(x+1);
+}'
+assert 8 'int main() {
+int x;
+int y;
+return sizeof x + sizeof y;
+}'
+assert 4 'int main() {
+return sizeof(sizeof(1));
+}'
+assert 4 'int main() {
+int x;
+return sizeof(sizeof(x) + 4);
+}'
+assert 8 'int main() {
+int *x;
+return sizeof(x + 4);
+}'
+
+
 
 
 

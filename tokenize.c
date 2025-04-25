@@ -97,6 +97,13 @@ Token *tokenize(char *p) {
       p += 3;
       continue;
     }
+    
+    // sizeof
+    if (strncmp(p, "sizeof", 6) == 0 && !is_alnumunder(p[6])) {
+      cur = new_token(TK_SIZEOF, cur, p, 6);
+      p += 6;
+      continue;
+    }
 
     // 英小文字or英大文字or数字orアンダーバーで先頭数字はだめ(isdigitで解釈されるはず)
     // 暫定的に英小文字だけとする

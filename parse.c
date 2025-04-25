@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #include "9cc.h"
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
@@ -471,7 +472,7 @@ Node *mul() {
       return node;
   }
 }
-// unary = ("+" | "-")? primary | ("&" | "*") unary
+// unary = ("+" | "-")? primary | ("&" | "*" | "sizeof") unary
 Node *unary() {
   if (consume("+"))
     return primary();
@@ -481,6 +482,11 @@ Node *unary() {
     return new_node_unary(ND_ADDR, unary());
   if (consume("*"))
     return new_node_unary(ND_DEREF, unary());
+  if (consume_kind(TK_SIZEOF)) {
+    Node *node = unary();
+    if (node->type->ty == INT) return new_node_num(4);
+    return new_node_num(8);
+  }
   return primary();
 }
 // primary =  num
