@@ -68,6 +68,7 @@ Type *new_type_array(size_t arr_sz, Type *elem) {
   type->ty = ARRAY;
   type->array_size = arr_sz;
   type->size = arr_sz * elem->size;
+  type->ptr_to = elem;
   return type;
 }
 
@@ -84,10 +85,14 @@ Node *new_node_unary(NodeKind kind, Node *lhs) {
   node->lhs = lhs;
 
   if (kind == ND_DEREF) {
-    if (lhs->type && lhs->type->ty == PTR) {
-      node->type = lhs->type->ptr_to;
+    if (lhs->type) {
+      if (lhs->type->ty == PTR || lhs->type->ty == ARRAY) {
+        node->type = lhs->type->ptr_to;
+      } else {
+        error_at(token->str, "invalid type to deref (neither PTR nor ARRAY).");
+      }
     } else {
-      error_at(token->str, "ポインタ型ではありません");
+      error_at(token->str, "間接演算子の中身の型が不明です");
     }
   } else if (kind == ND_ADDR) {
     if (lhs->type) {
@@ -108,7 +113,15 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
   if (kind == ND_ASSIGN) {
     if (lhs->type && rhs->type) {
       // debug("lhs->type->ty: %d, rhs->type->ty: %d\n", lhs->type->ty, rhs->type->ty);
+
+      if (lhs->type->ty == ARRAY) {
+        error_at(token->str, "ARRAY型は左辺値ではありません");
+      }
+
+      // PTR = ARRAYの代入のみ許す(キャストする)(逆はダメ)
       if (lhs->type->ty == rhs->type->ty) {
+        node->type = lhs->type;
+      } else if (lhs->type->ty == PTR && rhs->type->ty == ARRAY) {
         node->type = lhs->type;
       } else {
         error_at(token->str, "型が一致しません");
@@ -122,21 +135,21 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
   if (lhs->type && rhs->type) {
     if (lhs->type->ty == INT && rhs->type->ty == INT) {
       node->type = new_type_int();
-    } else if (lhs->type->ty == PTR && rhs->type->ty == INT) {
+    } else if ((lhs->type->ty == PTR || lhs->type->ty == ARRAY) && rhs->type->ty == INT) {
       node->type = lhs->type;
       node->kind = (kind == ND_ADD) ? ND_PTR_ADD : ND_PTR_SUB;
-    } else if (lhs->type->ty == INT && rhs->type->ty == PTR) {
+    } else if (lhs->type->ty == INT && (rhs->type->ty == PTR || rhs->type->ty == ARRAY)) {
       if (kind == ND_SUB) {
-        error_at(token->str, "INT - PTR の演算はできません");
+        error_at(token->str, "INT - PTR(or ARRAY) の演算はできません");
       }
-      // lhs, rhsを入れ替える
+      // lhs, rhsを逆向きに持つようにする(PTR(or ARRAY) + INT に統一)
       node->lhs = rhs;
       node->rhs = lhs;
       node->type = rhs->type;
       
       node->kind = ND_PTR_ADD;
-    } else if (lhs->type->ty == PTR && rhs->type->ty == PTR) {
-      error_at(token->str, "PTR + PTR の演算はできません");
+    } else {
+      error_at(token->str, "不正な二項演算です(PTR + PTR 等)");
     }
   } else {
     error_at(token->str, "二項演算のどちらかの辺の型が不明です");

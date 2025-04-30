@@ -108,8 +108,10 @@ typedef enum {
 typedef struct Type Type;
 struct Type {
   enum {INT, PTR, ARRAY} ty;
-  Type *ptr_to;
+  Type *ptr_to; // PTR型のptr先またはARRAY型の要素型
   int size;
+
+  // ARRAY型のみで使われる
   size_t array_size;
 };
 Type *expect_type();

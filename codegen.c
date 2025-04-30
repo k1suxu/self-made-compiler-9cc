@@ -121,26 +121,30 @@ void gen(Node *node) {
 
     case ND_LVAR: {
       gen_lval(node);
-      printAssembly("pop rax");
-      switch (node->type->size) {
-        case 1:
-          printAssembly("movzx rax, byte [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
-          break;
-        case 4:
-          printAssembly("mov eax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
-          break;
-        case 8:
-          printAssembly("mov rax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
-          break;
-        default:
-          error("変数のサイズが不正です %d", node->type->size);
+
+      // ARRAYに関しては、その先頭アドレスを取ってくることで十分
+      if (node->type->ty != ARRAY) {
+        printAssembly("pop rax");
+        switch (node->type->size) {
+          case 1:
+            printAssembly("movzx rax, byte [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+            break;
+          case 4:
+            printAssembly("mov eax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+            break;
+          case 8:
+            printAssembly("mov rax, [rax]"); // raxがさすアドレス(rbp-offset)の中身をraxに代入(これが変数アドレスになる)
+            break;
+          default:
+            error("変数のサイズが不正です %d", node->type->size);
+        }
+        printAssembly("push rax");
       }
-      printAssembly("push rax");
       return;
     }
 
     case ND_ASSIGN: {
-      gen_lval(node->lhs);
+      gen_lval(node->lhs); // deref以外では左辺にarrayが入らないし、derefの場合は結局ND_LVARに帰着されるため修正不要(ポインタ加減算によるARRAYアクセスの実装)
       gen(node->rhs);
 
       printAssembly("pop rdi"); // 右辺値をrdiへ取り出す

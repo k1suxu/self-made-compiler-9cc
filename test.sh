@@ -645,8 +645,41 @@ assert 24 'int main() {
   int *x[3];
   return sizeof(x);
 }'
+assert 8 'int main() {
+  int *x[3];
+  int *p;
+  p = x;
+  return sizeof(p);
+}'
 
-
-
+# array access by pointer-arithmetic test
+assert 5 'int main() {
+  int a[2];
+  *a = 1;
+  *(a + 1) = 2;
+  int *p;
+  p = a;
+  int x;
+  x = *(a + 1);
+  return *p + *(p + 1) + x;
+}'
+assert 9 'int main() {
+  int a[2];
+  *a = 1;
+  *(a + 1) = 2;
+  int *p;
+  p = a + 1;
+  *p = 4;
+  int q;
+  q = *(a + 1) * *a;
+  return *(a + 1) + *a + q;
+}'
+assert 10 'int main() {
+int x[3];
+    *x = 10;
+    int q;
+    q = *(&(*x));
+    return q;
+}'
 
 echo OK
