@@ -107,9 +107,10 @@ typedef enum {
 
 typedef struct Type Type;
 struct Type {
-  enum {INT, PTR} ty;
+  enum {INT, PTR, ARRAY} ty;
   Type *ptr_to;
   int size;
+  size_t array_size;
 };
 Type *expect_type();
 
@@ -141,7 +142,7 @@ struct Node {
   // var def
   char *varName;
 
-  // 演算結果のtype
+  // 演算結果のtype (sizeの計算は保証していない？？)
   Type *type;
 };
 Node *new_node(NodeKind kind);

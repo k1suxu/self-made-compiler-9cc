@@ -636,7 +636,15 @@ int *x;
 return sizeof(x + 4);
 }'
 
-
+# array declare test
+assert 12 'int main() {
+  int x[3];
+  return sizeof(x);
+}'
+assert 24 'int main() {
+  int *x[3];
+  return sizeof(x);
+}'
 
 
 

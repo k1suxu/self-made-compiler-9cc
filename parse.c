@@ -63,6 +63,13 @@ Type *new_type_ptr(Type *ptr_to) {
   type->size = 8;
   return type;
 }
+Type *new_type_array(size_t arr_sz, Type *elem) {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = ARRAY;
+  type->array_size = arr_sz;
+  type->size = arr_sz * elem->size;
+  return type;
+}
 
 // なんでも
 Node *new_node(NodeKind kind) {
@@ -163,15 +170,9 @@ Type *expect_type() {
   if (!consume_kind(TK_INT)) {
     error_at(token->str, "関数の返り値または引数および変数の宣言時に、型は省略できません");
   }
-  Type *retType = calloc(1, sizeof(Type));
-  retType->ty = INT;
-  retType->size = 4;
+  Type *retType = new_type_int();
   while (consume("*")) {
-    Type *ptr = calloc(1, sizeof(Type));
-    ptr->ty = PTR;
-    ptr->ptr_to = retType;
-    ptr->size = 8;
-    retType = ptr;
+    retType = new_type_ptr(retType);
   }
   return retType;
 }
@@ -234,7 +235,7 @@ void func() {
       found = calloc(1, sizeof(LVar));
       found->name = arg_tok->str;
       found->len = arg_tok->len;
-      found->offset = (cur->stackSize + lvar_type->size); // 8バイト固定
+      found->offset = (cur->stackSize + lvar_type->size);
       found->type = lvar_type;
 
       cur->stackSize += lvar_type->size;
@@ -327,11 +328,17 @@ Node *stmt() {
       error_at(tok->str, "Redeclaration of %.*s", tok->len, tok->str);
     }
 
+    if (consume("[")) {
+      int arr_sz = expect_number();
+      expect("]");
+      lvar_type = new_type_array(arr_sz, lvar_type);
+    }
+
     lvar = calloc(1, sizeof(LVar));
     lvar->name = tok->str;
     lvar->len = tok->len;
     Function *code_back = codes->back->cur;
-    lvar->offset = (code_back->stackSize + lvar_type->size); // 8バイト固定
+    lvar->offset = (code_back->stackSize + lvar_type->size);
     lvar->type = lvar_type;
 
     code_back->stackSize += lvar_type->size;
@@ -484,8 +491,7 @@ Node *unary() {
     return new_node_unary(ND_DEREF, unary());
   if (consume_kind(TK_SIZEOF)) {
     Node *node = unary();
-    if (node->type->ty == INT) return new_node_num(4);
-    return new_node_num(8);
+    return new_node_num(node->type->size);
   }
   return primary();
 }
