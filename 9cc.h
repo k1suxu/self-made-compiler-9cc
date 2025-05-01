@@ -21,7 +21,7 @@ void debug(char *fmt, ...);
 // トークンの種類
 typedef enum {
   TK_RESERVED, // 記号
-  TK_IDENT,    // 識別子 (a-zの１文字変数名)
+  TK_IDENT,    // 識別子 (変数名, 関数名)
   TK_NUM,      // 整数トークン
   TK_EOF,      // 入力の終わりを表すトークン
   TK_RETURN,
