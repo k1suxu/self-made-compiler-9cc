@@ -53,6 +53,7 @@ assert() {
 }
 
 make
+
 # assert 7 'int main() {
 #   int i;
 #   i = 0;
@@ -60,6 +61,7 @@ make
 #   }
 #   return i;
 # }'
+
 assert 0 'int main() {0;}'
 assert 42 'int main() { 42; }'
 assert 21 'int main() { 5+20-4; }'
@@ -681,5 +683,76 @@ int x[3];
     q = *(&(*x));
     return q;
 }'
+
+assert 6 '
+int main() {
+  int x[3];
+  *x = 1;
+  *(x + 1) = 2;
+  *(x + 2) = 3;
+  return *x + *(x + 1) + *(x + 2);
+}'
+
+assert 6 '
+int hoge(int x, int y, int z) {
+  return x + y + z;
+}
+int main() {
+  int x; int y; int z;
+  x = 1;
+  y = 2;
+  z = 3;
+  return hoge(x, y, z);
+}'
+
+assert 6 '
+int hoge(int x, int y, int z) {
+return x + y + z;
+}
+int main() {
+  int x[3];
+  *x = 1;
+  *(x + 1) = 2;
+  *(x + 2) = 3;
+  return hoge(*x, *(x + 1), *(x + 2));
+}'
+
+# arithmetic operation during function call test
+assert 8 '
+int hoge(int x, int y, int z) {
+  return x + y + z;
+}
+int main() {
+  int x; int y; int z;
+  x = 1;
+  y = 2;
+  z = 3;
+  return hoge(x+y, x-y+z, x*2-2*(y-1)+z);
+}'
+
+# memory-access during function call test
+# assert 6 '
+# int hoge(int x[]) {
+#   return *x + *(x+1) + *(x+2);
+# }
+# int main() {
+#   int x[3];
+#   *x = 1;
+#   *(x+1) = 2;
+#   *(x+2) = 3;
+#   return hoge(x);
+# }'
+
+# assert 6 '
+# int hoge(int *x) {
+#   return *x + *(x+1) + *(x+2);
+# }
+# int main() {
+#   int x[3];
+#   *x = 1;
+#   *(x+1) = 2;
+#   *(x+2) = 3;
+#   return hoge(x);
+# }'
 
 echo OK

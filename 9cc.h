@@ -66,6 +66,7 @@ typedef struct List List;
 struct ListDatum {
   void *cur;
   ListDatum *next;
+  ListDatum *prev;  // 双方向連結リスト用の前の要素へのポインタ
 };
 struct List {
   ListDatum *front;

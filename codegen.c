@@ -71,12 +71,13 @@ void gen(Node *node) {
     }
 
     case ND_FUNC_CALL: {
-      int cnt = 0;
-      for (ListDatum *arg = node->args->front; arg; arg = arg->next) {
-        if (cnt == 6) {
-          error("7つ以上の引数は指定できません");
-        }
-
+      int cnt = node->args->size;
+      if (cnt > 6) {
+        error("7つ以上の引数はサポートされていません");
+      }
+      int regi_id = cnt;
+      for (ListDatum *arg = node->args->back; arg; arg = arg->prev) {
+        --cnt;
         Node *cur = arg->cur;
         gen(cur);
         printAssembly("pop rax"); // 演算結果を取ってくる
@@ -93,7 +94,6 @@ void gen(Node *node) {
           default:
             error("引数のサイズが不正です: in-function-call: %d", cur->type->size);
         }
-        cnt++;
       }
 
       // [DONE]: rspが16の倍数になるように調整 (現状はstack_size=0よりずれる可能性がないが、将来的にはずれる可能性がある)
