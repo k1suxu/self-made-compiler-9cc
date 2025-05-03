@@ -756,3 +756,14 @@ int main() {
 # }'
 
 echo OK
+
+# error-tests
+# assert 10 '
+# int main() {
+# int *p;
+# int x;
+# x = 3;
+# p = &x;
+# *p = 10;
+# return *(p * 10);
+# }'

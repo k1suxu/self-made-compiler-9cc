@@ -132,27 +132,39 @@ Node *new_node_binary(NodeKind kind, Node *lhs, Node *rhs) {
     return node;
   }
 
-  if (lhs->type && rhs->type) {
-    if (lhs->type->ty == INT && rhs->type->ty == INT) {
-      node->type = new_type_int();
-    } else if ((lhs->type->ty == PTR || lhs->type->ty == ARRAY) && rhs->type->ty == INT) {
-      node->type = lhs->type;
-      node->kind = (kind == ND_ADD) ? ND_PTR_ADD : ND_PTR_SUB;
-    } else if (lhs->type->ty == INT && (rhs->type->ty == PTR || rhs->type->ty == ARRAY)) {
-      if (kind == ND_SUB) {
-        error_at(token->str, "INT - PTR(or ARRAY) の演算はできません");
+  if (kind == ND_ADD || kind == ND_SUB) { // add or sub
+    if (lhs->type && rhs->type) {
+      if (lhs->type->ty == INT && rhs->type->ty == INT) {
+        node->type = new_type_int();
+      } else if ((lhs->type->ty == PTR || lhs->type->ty == ARRAY) && rhs->type->ty == INT) {
+        node->type = lhs->type;
+        node->kind = (kind == ND_ADD) ? ND_PTR_ADD : ND_PTR_SUB;
+      } else if (lhs->type->ty == INT && (rhs->type->ty == PTR || rhs->type->ty == ARRAY)) {
+        if (kind == ND_SUB) {
+          error_at(token->str, "INT - PTR(or ARRAY) の演算はできません");
+        }
+        // lhs, rhsを逆向きに持つようにする(PTR(or ARRAY) + INT に統一)
+        node->lhs = rhs;
+        node->rhs = lhs;
+        node->type = rhs->type;
+        
+        node->kind = ND_PTR_ADD;
+      } else {
+        error_at(token->str, "不正な二項演算です(PTR + PTR 等)");
       }
-      // lhs, rhsを逆向きに持つようにする(PTR(or ARRAY) + INT に統一)
-      node->lhs = rhs;
-      node->rhs = lhs;
-      node->type = rhs->type;
-      
-      node->kind = ND_PTR_ADD;
     } else {
-      error_at(token->str, "不正な二項演算です(PTR + PTR 等)");
+      error_at(token->str, "二項演算のどちらかの辺の型が不明です");
     }
-  } else {
-    error_at(token->str, "二項演算のどちらかの辺の型が不明です");
+  } else { // other binary operation
+    if (lhs->type && rhs->type) {
+      if (lhs->type->ty != rhs->type->ty) {
+        error_at(token->str, "binary operation between incompatible types");
+      } else {
+        node->type = lhs->type;
+      }
+    } else {
+      error_at(token->str, "二項演算のどちらかの辺の型が不明です");
+    }
   }
 
   return node;
