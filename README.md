@@ -37,6 +37,7 @@ Please see `test.sh` for detailed test cases.
   - Array declarations
   - Implicit cast from array to pointer
   - Element access via dereference
+
 ☑ Step 22: "Index Access of Array"
 
 ## Additional Features
