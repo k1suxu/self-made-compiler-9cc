@@ -739,6 +739,92 @@ int x[3][3][3][3];
 return ****x + *(1+*(*(*x+1)+2)) + *(*(1+*(*(x+1)+2)+1)+1);
 }'
 
+# array access by index test (rewrite of pointer-arithmetic access test)
+assert 5 'int main() {
+  int a[2];
+  a[0] = 1;
+  a[1] = 2;
+  int *p;
+  p = a;
+  int x;
+  x = a[1];
+  return p[0] + p[1] + x;
+}'
+assert 9 'int main() {
+  int a[2];
+  a[0] = 1;
+  a[1] = 2;
+  int *p;
+  p = a + 1;
+  *p = 4;
+  int q;
+  q = a[1] * a[0];
+  return a[1] + *a + q;
+}'
+assert 10 'int main() {
+int x[3];
+    x[0] = 10;
+    int q;
+    q = *(&(*x));
+    return q;
+}'
+assert 6 '
+int main() {
+  int x[3];
+  x[0] = 1;
+  x[1] = 2;
+  x[2] = 3;
+  return x[0] + x[1] + x[2];
+}'
+assert 6 '
+int hoge(int x, int y, int z) {
+return x + y + z;
+}
+int main() {
+  int x[3];
+  x[0] = 1;
+  x[1] = 2;
+  x[2] = 3;
+  return hoge(x[0], x[1], x[2]);
+}'
+
+# multi-dimensional array test // x[0][1] = 1; x[1][2] = 2;
+assert 3 '
+int main() {
+  int x[2][3];
+  x[1][0] = 1;
+  x[0][2] = 2;
+  return x[1][0] + x[0][2];
+}'
+assert 15 '
+int main() {
+int x[3][3][3][3];
+x[0][0][0][0] = 10;
+((x[1][2])[0])[1] = 2;
+x[1][2][1][1] = 3;
+return x[0][0][0][0] + x[1][2][0][1] + x[1][2][1][1];
+}'
+assert 64 '
+int main() {
+    int idx;
+    int x[10][10];
+    int i; int j;
+    for (i = 1; i <= 9; i = i+1) {
+        for (j = 1; j <= 9; j = j+1) {
+            x[i][j] = i * j;
+        }
+    }
+    int ans;
+    ans = 0;
+    for (i = 1; i * 2 <= 9; i = i+1) {
+        for (j = 1; j * 2 <= 9; j = j+1) {
+            ans = ans + x[idx=2*i][2*j-1];
+        }
+    }
+    return ans;
+}'
+
+
 # empty-cond
 # assert 7 'int main() {
 #   int i;

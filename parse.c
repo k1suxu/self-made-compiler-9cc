@@ -535,6 +535,7 @@ Node *primary() {
   if (consume("(")) {
     Node *node = expr();
     expect(")");
+    node = index_access(node);
     return node;
   }
 
@@ -581,6 +582,8 @@ Node *primary() {
       }
 
       node->type = func->retType;
+      node = index_access(node);
+
       return node;
     }
 
@@ -594,17 +597,19 @@ Node *primary() {
       error_at(tok->str, "Undefined Error (variable): %.*s", tok->len, tok->str);
     }
 
+    node = index_access(node);
     return node;
   }
   // 数値のはず
   return new_node_num(expect_number());
 }
 
-void index_access(Node *node) {
+Node* index_access(Node *node) {
   while (consume("[")) {
     Node *ptr_add = expr();
-    node = new_node_binary(ND_PTR_ADD, node, ptr_add);
+    node = new_node_binary(ND_ADD, node, ptr_add);
     node = new_node_unary(ND_DEREF, node);
     expect("]");
   }
+  return node;
 }

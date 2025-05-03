@@ -102,7 +102,7 @@ typedef enum {
   ND_BLOCK,
   ND_FUNC_CALL,
   ND_VAR_DEF,
-  ND_PTR_ADD,
+  ND_PTR_ADD, // PTR_ADD, PTR_SUBは基本、new_node_binaryの中でのみadd, subから暗黙的にキャストされる
   ND_PTR_SUB,
 } NodeKind;
 
@@ -167,6 +167,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
+Node *index_access(Node *node);
 
 // アセンブリ生成
 int use_label();
