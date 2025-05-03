@@ -787,8 +787,6 @@ int main() {
   x[2] = 3;
   return hoge(x[0], x[1], x[2]);
 }'
-
-# multi-dimensional array test // x[0][1] = 1; x[1][2] = 2;
 assert 3 '
 int main() {
   int x[2][3];
