@@ -54,14 +54,6 @@ assert() {
 
 make
 
-# assert 7 'int main() {
-#   int i;
-#   i = 0;
-#   for(; i < 7; i = i + 1) {
-#   }
-#   return i;
-# }'
-
 assert 0 'int main() {0;}'
 assert 42 'int main() { 42; }'
 assert 21 'int main() { 5+20-4; }'
@@ -729,6 +721,32 @@ int main() {
   z = 3;
   return hoge(x+y, x-y+z, x*2-2*(y-1)+z);
 }'
+
+# multi-dimensional array test // x[0][1] = 1; x[1][2] = 2;
+assert 3 '
+int main() {
+  int x[2][3];
+  *(*x+1) = 1;
+  *(*(x+1)+2) = 2;
+  return *(*x+1) + *(*(x+1)+2);
+}'
+assert 15 '
+int main() {
+int x[3][3][3][3];
+****x = 10;
+*(1+*(*(*x+1)+2)) = 2;
+*(*(1+*(*(x+1)+2)+1)+1) = 3;
+return ****x + *(1+*(*(*x+1)+2)) + *(*(1+*(*(x+1)+2)+1)+1);
+}'
+
+# empty-cond
+# assert 7 'int main() {
+#   int i;
+#   i = 0;
+#   for(; i < 7; i = i + 1) {
+#   }
+#   return i;
+# }'
 
 # memory-access during function call test
 # assert 6 '

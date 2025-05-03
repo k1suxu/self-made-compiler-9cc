@@ -353,10 +353,17 @@ Node *stmt() {
       error_at(tok->str, "Redeclaration of %.*s", tok->len, tok->str);
     }
 
-    if (consume("[")) {
-      int arr_sz = expect_number();
+    List *size_list = listNew();
+    while (consume("[")) {
+      int *x = calloc(1, sizeof(int));
+      *x = expect_number();
+      listPush(size_list, x);
       expect("]");
-      lvar_type = new_type_array(arr_sz, lvar_type);
+    }
+
+    for (ListDatum *tail = size_list->back; tail; tail = tail->prev) {
+      int *x = tail->cur;
+      lvar_type = new_type_array(*x, lvar_type);
     }
 
     lvar = calloc(1, sizeof(LVar));
@@ -521,8 +528,8 @@ Node *unary() {
   return primary();
 }
 // primary =  num
-//         | ident ("(" (assign ("," assign)*)? ")")?
-//         | "(" expr ")"
+//         | ident ("(" (assign ("," assign)*)? ")")? index_access*
+//         | "(" expr ")" index_access*
 Node *primary() {
   // 次のトークンが "(" なら、 "(" expr ")"のはず
   if (consume("(")) {
@@ -591,4 +598,13 @@ Node *primary() {
   }
   // 数値のはず
   return new_node_num(expect_number());
+}
+
+void index_access(Node *node) {
+  while (consume("[")) {
+    Node *ptr_add = expr();
+    node = new_node_binary(ND_PTR_ADD, node, ptr_add);
+    node = new_node_unary(ND_DEREF, node);
+    expect("]");
+  }
 }

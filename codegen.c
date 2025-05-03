@@ -123,7 +123,9 @@ void gen(Node *node) {
       gen_lval(node);
 
       // ARRAYに関しては、その先頭アドレスを取ってくることで十分
-      if (node->type->ty != ARRAY) {
+      if (node->type->ty == ARRAY) {
+        
+      } else {
         printAssembly("pop rax");
         switch (node->type->size) {
           case 1:
@@ -233,18 +235,22 @@ void gen(Node *node) {
     case ND_DEREF: {
       gen(node->lhs);
       printAssembly("pop rax");
-      switch (node->type->size) {
-        case 1:
-          printAssembly("movzx rax, byte [rax]");
-          break;
-        case 4:
-          printAssembly("mov eax, [rax]");
-          break;
-        case 8:
-          printAssembly("mov rax, [rax]");
-          break;
-        default:
-          error("ポインタのサイズが不正です: %d", node->type->size);
+      if (node->type->ty == ARRAY) {
+
+      } else {
+        switch (node->type->size) {
+          case 1:
+            printAssembly("movzx rax, byte [rax]");
+            break;
+          case 4:
+            printAssembly("mov eax, [rax]");
+            break;
+          case 8:
+            printAssembly("mov rax, [rax]");
+            break;
+          default:
+            error("ポインタのサイズが不正です: %d", node->type->size);
+        }
       }
       printAssembly("push rax");
       return;
