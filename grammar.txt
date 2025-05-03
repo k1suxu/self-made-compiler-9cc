@@ -24,6 +24,8 @@ mul = unary ("*" unary | "/" unary)*
 
 unary = ("+" | "-")? primary | ("&" | "*" | "sizeof") unary
 
-primary =   num
-          | ident ("(" (assign ("," assign)*)? ")")?
-          | "(" expr ")"
+primary =  num
+        | ident ("(" (assign ("," assign)*)? ")")? index_access*
+        | "(" expr ")" index_access*
+
+index_access = ("[" expr "]")*
