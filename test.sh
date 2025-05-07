@@ -822,6 +822,17 @@ int main() {
     return ans;
 }'
 
+# ptr function call test
+assert 3 '
+int hoge(int *x, int *y) {
+  return *x + *y;
+}
+int main() {
+  int x; int y;
+  x = 1;
+  y = 2;
+  return hoge(&x, &y);
+}'
 
 # empty-cond
 # assert 7 'int main() {
@@ -855,6 +866,18 @@ int main() {
 #   *(x+1) = 2;
 #   *(x+2) = 3;
 #   return hoge(x);
+# }'
+
+# assesrt 6 '
+# int hoge(int *x, int *y) {
+#   return *(x + 1) + *y;
+# }
+# int main() {
+#   int x[3];
+#   x[0] = 1;
+#   x[1] = 2;
+#   x[2] = 3;
+#   return hoge(x, &x[1]);
 # }'
 
 echo OK
