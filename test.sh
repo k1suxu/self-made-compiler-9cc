@@ -834,6 +834,18 @@ int main() {
   return hoge(&x, &y);
 }'
 
+# nested array test
+assert 3 '
+int main() {
+  int x[2];
+  int idx[2];
+  x[0] = 1;
+  x[1] = 2;
+  idx[0] = 0;
+  idx[1] = 1;
+  return x[idx[0]] + x[idx[1]];
+}'
+
 # empty-cond
 # assert 7 'int main() {
 #   int i;
