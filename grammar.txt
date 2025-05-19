@@ -1,6 +1,6 @@
 program = func*;
 
-func = func_name "(" (arg ("," arg)*)? ")" "{" stmt* "}"
+func = int ("*")* [FUNC_NAME] "(" (arg ("," arg)*)? ")" "{" stmt* "}"
 
 stmt =    expr ";"
         | "int" [VAR_NAME] ("[" num "]")? ";"
