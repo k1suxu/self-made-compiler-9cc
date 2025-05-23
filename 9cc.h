@@ -190,8 +190,6 @@ struct LVar {
 // extern LVar *locals; // ローカル変数辞書を表すグローバル変数
 LVar *find_lvar(Token *tok);
 
-extern int label_count; // labelの末尾につけるXXXXの数字を管理する(今はif, while等すべてに共通して一つの値を使っているが、将来的には各ラベルごとに管理するようにしたい)
-
 struct Function {
   List *roots;     // 抽象構文木のroot node  // list of Node*
   List *locals;   // ローカル変数それぞれのオフセットなど // list of LVar*

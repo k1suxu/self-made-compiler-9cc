@@ -6,7 +6,6 @@
 Token *token;
 char *user_input;
 LVar *locals;
-int label_count = 1;
 int rsp = 0;
 
 List *codes;
