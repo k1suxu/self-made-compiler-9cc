@@ -846,6 +846,27 @@ int main() {
   return x[idx[0]] + x[idx[1]];
 }'
 
+# pure-function test
+assert 2 '
+int increment(int x) {
+x = x + 1;}
+int main() {
+  int x;
+  x = 2;
+  increment(x);
+  return x;
+}'
+assert 3 '
+int increment(int* x) {
+  *x = *x + 1;
+}
+int main() {
+  int x;
+  x = 2;
+  increment(&x);
+  return x;
+}'
+
 # empty-cond
 # assert 7 'int main() {
 #   int i;
