@@ -867,6 +867,38 @@ int main() {
   return x;
 }'
 
+# independent declearation test
+assert 3 '
+int hoge(int x) {
+  int y;
+  y = x + 1;
+  return y;
+}
+int main() {
+  int y;
+  y = hoge(2);
+  return y;
+}'
+
+# now, this is regarded as a bug (duplicate variable name in different block)
+# assert 3 '
+# int hoge(int x) {
+#   int y;
+#   y = x + 1;
+#   return y;
+# }
+# int main() {
+#   {
+#     int y;
+#     y = hoge(2);
+#   }
+#   {
+#     int y;
+#     y = 3;
+#   }
+#   return y;
+# }'
+
 # empty-cond
 # assert 7 'int main() {
 #   int i;
