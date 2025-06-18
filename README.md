@@ -1,13 +1,13 @@
 # self-made-compiler-9cc
 
 ## Abstract
-This is a classic C compiler implemented by following the textbook available online:
+This is a classic C compiler implemented following the textbook available online:
 https://www.sigbus.info/compilerbook#%E6%A9%9F%E6%A2%B0%E8%AA%9E%E3%81%A8%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9
 
 The main goal of this project is to accomplish self-host.
 
 ## Scope of Coverage
-Please see `test.sh` for detailed test cases.
+Please kindly refer `test.sh` for detailed test cases.
 
 ## Progress According to the Textbook
 ☑ Step 1: "Single Integer" <br>
